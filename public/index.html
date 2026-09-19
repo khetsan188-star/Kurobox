@@ -1334,6 +1334,143 @@ async function playGachaSound(){
   }, 900);
 
 }
+  async function playRaritySound(rarity){
+
+  const ctx = await getAudioContext();
+
+  if(rarity === "Common"){
+
+    await playTone(440, 0.18, "sine", 0.10);
+
+    setTimeout(() => {
+      playTone(550, 0.20, "sine", 0.10);
+    }, 160);
+
+  }
+
+  else if(rarity === "Rare"){
+
+    await playTone(523, 0.18, "triangle", 0.12);
+
+    setTimeout(() => {
+      playTone(659, 0.18, "triangle", 0.12);
+    }, 160);
+
+    setTimeout(() => {
+      playTone(784, 0.28, "triangle", 0.14);
+    }, 320);
+
+  }
+
+  else if(rarity === "Epic"){
+
+    await playTone(440, 0.18, "sine", 0.12);
+
+    setTimeout(() => {
+      playTone(554, 0.18, "triangle", 0.13);
+    }, 150);
+
+    setTimeout(() => {
+      playTone(659, 0.18, "triangle", 0.14);
+    }, 300);
+
+    setTimeout(() => {
+      playTone(880, 0.35, "sine", 0.16);
+    }, 450);
+
+  }
+
+  else if(rarity === "Legendary"){
+
+    await playTone(523, 0.18, "triangle", 0.14);
+
+    setTimeout(() => {
+      playTone(659, 0.18, "triangle", 0.15);
+    }, 150);
+
+    setTimeout(() => {
+      playTone(784, 0.18, "triangle", 0.16);
+    }, 300);
+
+    setTimeout(() => {
+      playTone(1046, 0.30, "triangle", 0.18);
+    }, 450);
+
+    setTimeout(() => {
+      playTone(1318, 0.50, "sine", 0.20);
+    }, 650);
+
+  }
+
+}
+  async function playRaritySound(rarity){
+
+  const ctx = await getAudioContext();
+
+  if(rarity === "Common"){
+
+    await playTone(440, 0.18, "sine", 0.10);
+    setTimeout(() => {
+      playTone(550, 0.20, "sine", 0.10);
+    }, 160);
+
+  }
+
+  else if(rarity === "Rare"){
+
+    await playTone(523, 0.18, "triangle", 0.12);
+
+    setTimeout(() => {
+      playTone(659, 0.18, "triangle", 0.12);
+    }, 160);
+
+    setTimeout(() => {
+      playTone(784, 0.28, "triangle", 0.14);
+    }, 320);
+
+  }
+
+  else if(rarity === "Epic"){
+
+    await playTone(440, 0.18, "sine", 0.12);
+
+    setTimeout(() => {
+      playTone(554, 0.18, "triangle", 0.13);
+    }, 150);
+
+    setTimeout(() => {
+      playTone(659, 0.18, "triangle", 0.14);
+    }, 300);
+
+    setTimeout(() => {
+      playTone(880, 0.35, "sine", 0.16);
+    }, 450);
+
+  }
+
+  else if(rarity === "Legendary"){
+
+    await playTone(523, 0.18, "triangle", 0.14);
+
+    setTimeout(() => {
+      playTone(659, 0.18, "triangle", 0.15);
+    }, 150);
+
+    setTimeout(() => {
+      playTone(784, 0.18, "triangle", 0.16);
+    }, 300);
+
+    setTimeout(() => {
+      playTone(1046, 0.30, "triangle", 0.18);
+    }, 450);
+
+    setTimeout(() => {
+      playTone(1318, 0.50, "sine", 0.20);
+    }, 650);
+
+  }
+
+}
 async function playGacha(boxId,boxName,price){
 
   if(!currentUser){
@@ -1385,7 +1522,7 @@ openingText.textContent = "🎁 Membuka Blind Box...";
 
  currentUser=result.data.user;
     const rarity = result.data.reward?.rarity || "Common";
-
+await playRaritySound(rarity);
 blindOverlay.classList.remove(
   "rarity-common",
   "rarity-rare",
