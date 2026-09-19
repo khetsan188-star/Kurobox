@@ -1079,26 +1079,42 @@ async function playTone(
 
 async function playGachaSound(){
 
-  await getAudioContext();
+  const ctx = await getAudioContext();
 
-  playTone(220,0.15,"sine",0.06);
+  const notes = [
+    [220, 0],
+    [330, 150],
+    [440, 300],
+    [550, 450],
+    [880, 900],
+    [1100, 1050]
+  ];
 
-  setTimeout(()=>{
-    playTone(330,0.15,"sine",0.07);
-  },150);
+  notes.forEach(([frequency, delay]) => {
 
-  setTimeout(()=>{
-    playTone(440,0.15,"sine",0.08);
-  },300);
+    setTimeout(() => {
 
-  setTimeout(()=>{
-    playTone(550,0.18,"triangle",0.09);
-  },450);
+      const oscillator = ctx.createOscillator();
+      const gain = ctx.createGain();
 
-  setTimeout(()=>{
-    playTone(880,0.25,"triangle",0.12);
-    playTone(1100,0.35,"sine",0.08);
-  },1200);
+      oscillator.type = "sine";
+      oscillator.frequency.value = frequency;
+
+      gain.gain.setValueAtTime(0.12, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(
+        0.001,
+        ctx.currentTime + 0.2
+      );
+
+      oscillator.connect(gain);
+      gain.connect(ctx.destination);
+
+      oscillator.start();
+      oscillator.stop(ctx.currentTime + 0.2);
+
+    }, delay);
+
+  });
 
 }
 async function playGacha(boxId,boxName,price){
