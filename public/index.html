@@ -824,13 +824,13 @@ async function playGacha(boxId,boxName,price){
       return;
     }
 
-    currentUser=result.data.user;
+  currentUser=result.data.user;
 
-    updateCoins();
+updateCoins();
 
-    showReward(result.data.reward);
+await playGachaAnimation(result.data.reward);
 
-    await loadInventory();
+await loadInventory();
     await loadBoxes();
 
   }catch(error){
@@ -845,7 +845,42 @@ async function playGacha(boxId,boxName,price){
 
   }
 }
+/* GACHA ANIMATION */
 
+function playGachaAnimation(reward){
+
+  return new Promise(resolve => {
+
+    const section = document.getElementById("rewardSection");
+    const name = document.getElementById("rewardName");
+    const probability = document.getElementById("rewardProbability");
+
+    name.textContent = "🎁 Membuka Box...";
+    probability.textContent = "✨ Menentukan hadiah...";
+
+    section.classList.remove("hidden");
+
+    section.scrollIntoView({
+      behavior:"smooth",
+      block:"center"
+    });
+
+    setTimeout(() => {
+
+      name.textContent = "🎉 " + (reward.name || "Mystery Item");
+
+      probability.textContent =
+        "Probability: " +
+        Number(reward.probability || 0) +
+        "%";
+
+      resolve();
+
+    }, 1800);
+
+  });
+
+}
 
 /* REWARD */
 
