@@ -7,76 +7,46 @@
 
 <style>
 *{box-sizing:border-box}
+html{scroll-behavior:smooth}
 
 body{
   margin:0;
-  background:#09090f;
+  background:#08080d;
   color:#fff;
-  font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+}
+
+body:before{
+  content:"";
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+  background:
+    radial-gradient(circle at 15% 5%,rgba(255,50,160,.12),transparent 30%),
+    radial-gradient(circle at 90% 20%,rgba(120,70,255,.12),transparent 30%);
 }
 
 main{
-  max-width:720px;
+  max-width:760px;
   margin:auto;
-  padding:20px 16px 100px;
+  padding:20px 16px 110px;
+  position:relative;
 }
 
 .brand{
   font-size:30px;
-  font-weight:900;
-  letter-spacing:-1px;
+  font-weight:950;
+  letter-spacing:-1.5px;
 }
 
-.brand span{
-  color:#ff4fa3;
+.brand b{
+  color:#ff4ca5;
 }
 
-.muted{
-  color:#999;
-}
-
-.hero{
-  margin-top:20px;
-  padding:24px;
-  border:1px solid #292936;
-  border-radius:24px;
-  background:
-    radial-gradient(circle at top right,#4b1740 0,#18121f 35%,#12121a 70%);
-}
-
-.hero h1{
-  font-size:34px;
-  line-height:1.1;
-  margin:14px 0;
-}
-
-.badge{
-  display:inline-block;
-  padding:6px 10px;
-  border-radius:999px;
-  background:#292735;
-  color:#ff72b8;
-  font-size:12px;
-  font-weight:800;
-}
-
-button{
-  border:0;
-  border-radius:13px;
-  padding:13px 17px;
-  font-weight:800;
-  cursor:pointer;
-  color:white;
-  background:#ff3f9f;
-}
-
-button:hover{
-  opacity:.9;
-}
-
-button:disabled{
-  opacity:.5;
-  cursor:not-allowed;
+.subtitle{
+  color:#858592;
+  font-size:13px;
+  margin-top:2px;
 }
 
 .topbar{
@@ -87,40 +57,105 @@ button:disabled{
 }
 
 .coins{
-  background:#171720;
-  border:1px solid #30303c;
-  border-radius:14px;
   padding:10px 14px;
-  font-weight:800;
+  border:1px solid #343441;
+  border-radius:14px;
+  background:#15151d;
+  font-weight:850;
+  white-space:nowrap;
+}
+
+.hero{
+  margin-top:22px;
+  padding:27px 22px;
+  border-radius:26px;
+  border:1px solid #33273a;
+  background:
+    radial-gradient(circle at 90% 10%,#64204e 0,transparent 35%),
+    linear-gradient(145deg,#18121e,#101016);
+  box-shadow:0 15px 50px rgba(0,0,0,.25);
+}
+
+.badge{
+  display:inline-block;
+  padding:6px 10px;
+  border-radius:999px;
+  background:#281b2b;
+  color:#ff69b3;
+  font-size:11px;
+  font-weight:900;
+  letter-spacing:.5px;
+}
+
+.hero h1{
+  margin:14px 0 10px;
+  font-size:36px;
+  line-height:1.05;
+  letter-spacing:-1.5px;
+}
+
+.hero p{
+  color:#9999a5;
+  line-height:1.5;
 }
 
 .section{
-  margin-top:25px;
+  margin-top:28px;
 }
 
-.section-title{
-  font-size:21px;
-  font-weight:900;
-  margin-bottom:12px;
-}
-
-.card{
-  margin-top:12px;
-  padding:18px;
-  border:1px solid #292936;
-  border-radius:18px;
-  background:#12121a;
-}
-
-.box-card{
+.title{
   display:flex;
   justify-content:space-between;
   align-items:center;
-  gap:15px;
+  margin-bottom:12px;
 }
 
-.box-info{
-  flex:1;
+.title h2{
+  margin:0;
+  font-size:21px;
+}
+
+.card{
+  padding:18px;
+  margin-top:12px;
+  border:1px solid #292934;
+  border-radius:20px;
+  background:#111118;
+}
+
+.box-card{
+  position:relative;
+  overflow:hidden;
+}
+
+.box-card:after{
+  content:"";
+  position:absolute;
+  width:130px;
+  height:130px;
+  right:-45px;
+  top:-45px;
+  border-radius:50%;
+  background:rgba(255,70,165,.08);
+}
+
+.box-top{
+  display:flex;
+  gap:15px;
+  align-items:center;
+}
+
+.box-art{
+  width:72px;
+  height:72px;
+  flex:none;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:18px;
+  background:linear-gradient(145deg,#32142d,#181421);
+  border:1px solid #49334a;
+  font-size:35px;
 }
 
 .box-name{
@@ -128,10 +163,47 @@ button:disabled{
   font-weight:900;
 }
 
+.description{
+  margin-top:4px;
+  color:#898995;
+  font-size:13px;
+}
+
 .price{
-  margin-top:8px;
-  color:#ff72b8;
-  font-weight:800;
+  margin-top:9px;
+  color:#ff67b1;
+  font-weight:900;
+}
+
+.actions{
+  display:flex;
+  gap:9px;
+  margin-top:16px;
+}
+
+button{
+  border:0;
+  border-radius:13px;
+  padding:12px 16px;
+  color:#fff;
+  background:#ff3f9f;
+  font-weight:900;
+  cursor:pointer;
+}
+
+button:hover{
+  transform:translateY(-1px);
+  filter:brightness(1.05);
+}
+
+button:disabled{
+  opacity:.5;
+  cursor:not-allowed;
+  transform:none;
+}
+
+.secondary{
+  background:#282832;
 }
 
 .hidden{
@@ -139,124 +211,160 @@ button:disabled{
 }
 
 .auth{
-  margin-top:18px;
-  padding:20px;
-  border:1px solid #292936;
-  border-radius:20px;
-  background:#12121a;
+  margin-top:22px;
 }
 
 input{
   width:100%;
-  margin-top:9px;
-  margin-bottom:12px;
-  padding:13px;
-  border-radius:12px;
-  border:1px solid #33333f;
-  background:#0d0d14;
-  color:white;
+  padding:14px;
+  margin:7px 0;
+  border:1px solid #30303b;
+  border-radius:13px;
+  background:#101017;
+  color:#fff;
   outline:none;
 }
 
 input:focus{
-  border-color:#ff4fa3;
+  border-color:#ff4ca5;
 }
 
 .auth-buttons{
   display:flex;
   gap:10px;
+  margin-top:8px;
 }
 
 .auth-buttons button{
   flex:1;
 }
 
-.secondary{
-  background:#292936;
-}
-
 .message{
-  margin-top:12px;
-  font-size:14px;
+  margin-top:10px;
+  color:#92929e;
+  font-size:13px;
 }
 
-.reward{
+.reward-card{
   text-align:center;
-  padding:25px 15px;
-  border-radius:20px;
+  padding:30px 20px;
+  border-radius:24px;
+  border:1px solid #613454;
   background:
-    radial-gradient(circle,#54204c,#16131e 65%);
-  border:1px solid #67385b;
+    radial-gradient(circle at center,#4a1c43,transparent 60%),
+    #14111a;
+  animation:pop .45s ease;
 }
 
-.reward-icon{
-  font-size:60px;
-  margin-bottom:10px;
+@keyframes pop{
+  from{transform:scale(.92);opacity:0}
+  to{transform:scale(1);opacity:1}
+}
+
+.reward-box{
+  font-size:65px;
+  animation:bounce .8s ease;
+}
+
+@keyframes bounce{
+  0%{transform:scale(.5) rotate(-8deg)}
+  60%{transform:scale(1.15) rotate(5deg)}
+  100%{transform:scale(1) rotate(0)}
+}
+
+.reward-label{
+  color:#aaa;
+  margin-top:8px;
 }
 
 .reward-name{
-  font-size:25px;
-  font-weight:900;
-  color:#ff72b8;
+  margin-top:5px;
+  font-size:27px;
+  font-weight:950;
+  color:#ff6eb7;
 }
 
 .inventory-item{
   display:flex;
-  justify-content:space-between;
   align-items:center;
-  gap:10px;
+  gap:13px;
+}
+
+.item-icon{
+  width:48px;
+  height:48px;
+  border-radius:13px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:#1d1721;
+  border:1px solid #39303c;
+  font-size:24px;
+}
+
+.item-info{
+  flex:1;
+}
+
+.item-name{
+  font-weight:850;
+}
+
+.item-date{
+  color:#777783;
+  font-size:11px;
+  margin-top:3px;
 }
 
 .status{
-  font-size:12px;
-  background:#24351f;
-  color:#9df080;
-  padding:5px 9px;
+  font-size:11px;
+  color:#9cf27e;
+  background:#182717;
   border-radius:999px;
+  padding:5px 8px;
+}
+
+.empty{
+  color:#777783;
+  text-align:center;
+  padding:22px;
 }
 
 nav{
   position:fixed;
+  z-index:20;
   bottom:0;
   left:0;
   right:0;
-  background:#101018;
-  border-top:1px solid #292936;
-  padding:12px 10px;
-  text-align:center;
-  color:#aaa;
-  z-index:10;
+  padding:10px;
+  background:rgba(13,13,19,.94);
+  backdrop-filter:blur(15px);
+  border-top:1px solid #282832;
 }
 
-.nav-inner{
-  max-width:720px;
+.nav{
+  max-width:760px;
   margin:auto;
   display:flex;
   justify-content:space-around;
-  font-size:13px;
+  color:#777783;
+  font-size:12px;
 }
 
-.nav-item{
+.nav div{
   cursor:pointer;
+  padding:5px 10px;
 }
 
-.nav-item.active{
-  color:#ff4fa3;
-  font-weight:800;
+.nav .active{
+  color:#ff58aa;
+  font-weight:900;
 }
 
 @media(max-width:500px){
-  .hero h1{
-    font-size:29px;
-  }
-
-  .box-card{
-    align-items:flex-start;
-  }
-
-  .box-card button{
-    padding:11px 12px;
-  }
+  .hero h1{font-size:31px}
+  .coins{font-size:12px;padding:9px 11px}
+  .box-art{width:62px;height:62px}
 }
 </style>
 </head>
@@ -265,11 +373,10 @@ nav{
 
 <main>
 
-  <!-- HEADER -->
   <div class="topbar">
     <div>
-      <div class="brand">🦊 Kuro<span>Box</span></div>
-      <div class="muted">Gacha • Collect • Discover</div>
+      <div class="brand">🦊 Kuro<b>Box</b></div>
+      <div class="subtitle">Gacha • Collect • Discover</div>
     </div>
 
     <div id="coinDisplay" class="coins hidden">
@@ -278,68 +385,63 @@ nav{
   </div>
 
 
-  <!-- AUTH -->
-  <section id="authSection" class="auth">
+  <!-- LOGIN -->
+  <section id="authSection" class="auth card">
 
-    <div class="section-title">🔐 Masuk ke KuroBox</div>
+    <div class="title">
+      <h2>🔐 Masuk KuroBox</h2>
+    </div>
 
-    <input
-      id="email"
-      type="email"
-      placeholder="Email"
-      autocomplete="email"
-    >
+    <input id="email" type="email" placeholder="Email">
 
-    <input
-      id="password"
-      type="password"
-      placeholder="Password"
-      autocomplete="current-password"
-    >
+    <input id="password" type="password" placeholder="Password">
 
     <div class="auth-buttons">
       <button onclick="login()">Login</button>
       <button class="secondary" onclick="register()">Daftar</button>
     </div>
 
-    <div id="authMessage" class="message muted"></div>
+    <div id="authMessage" class="message"></div>
 
   </section>
 
 
-  <!-- USER -->
+  <!-- APP -->
   <section id="userSection" class="hidden">
 
-    <div class="hero">
+    <section class="hero">
 
-      <span class="badge">KUROBOX MEMBER</span>
+      <span class="badge">KUROBOX COLLECTIBLE</span>
 
       <h1>
-        Buka Box-nya.<br>
-        Raih Kejutannya. 🎁
+        Buka Box.<br>
+        Temukan Hadiahmu. 🎁
       </h1>
 
-      <p class="muted">
-        Selamat datang di KuroBox.
-        Pilih box favoritmu dan coba keberuntunganmu.
+      <p>
+        Pilih mystery box dan lihat hadiah apa yang berhasil kamu dapatkan.
       </p>
 
-      <button onclick="logout()">Logout</button>
+      <button onclick="scrollToGacha()">
+        🎲 Mulai Gacha
+      </button>
 
-    </div>
+      <button class="secondary" onclick="logout()">
+        Logout
+      </button>
+
+    </section>
 
 
-    <!-- GACHA BOX -->
-    <section class="section">
+    <!-- BOX -->
+    <section id="gachaSection" class="section">
 
-      <div class="section-title">
-        🎲 Pilihan Gacha
+      <div class="title">
+        <h2>🎁 Mystery Box</h2>
       </div>
 
       <div id="boxes">
-        <div class="card muted">
-          Memuat box...
-        </div>
+        <div class="card empty">Memuat box...</div>
       </div>
 
     </section>
@@ -348,17 +450,15 @@ nav{
     <!-- REWARD -->
     <section id="rewardSection" class="section hidden">
 
-      <div class="section-title">
-        🎉 Hasil Gacha
+      <div class="title">
+        <h2>✨ Your Reward</h2>
       </div>
 
-      <div class="reward">
+      <div class="reward-card">
 
-        <div class="reward-icon">
-          🎁
-        </div>
+        <div class="reward-box">🎁</div>
 
-        <div class="muted">
+        <div class="reward-label">
           Kamu mendapatkan
         </div>
 
@@ -366,7 +466,7 @@ nav{
           -
         </div>
 
-        <p id="rewardProbability" class="muted"></p>
+        <div id="rewardProbability" class="message"></div>
 
       </div>
 
@@ -374,14 +474,14 @@ nav{
 
 
     <!-- INVENTORY -->
-    <section class="section">
+    <section id="inventorySection" class="section">
 
-      <div class="section-title">
-        📦 Inventory Saya
+      <div class="title">
+        <h2>📦 Inventory</h2>
       </div>
 
       <div id="inventory">
-        <div class="card muted">
+        <div class="card empty">
           Memuat inventory...
         </div>
       </div>
@@ -393,25 +493,28 @@ nav{
 </main>
 
 
-<!-- NAVIGATION -->
 <nav>
-  <div class="nav-inner">
-    <div class="nav-item active" onclick="scrollToTop()">
-      🏠 Beranda
+
+  <div class="nav">
+
+    <div class="active" onclick="scrollToTop()">
+      🏠 Home
     </div>
 
-    <div class="nav-item" onclick="scrollToGacha()">
+    <div onclick="scrollToGacha()">
       🎲 Gacha
     </div>
 
-    <div class="nav-item" onclick="scrollToInventory()">
-      📦 Inventori
+    <div onclick="scrollToInventory()">
+      📦 Inventory
     </div>
 
-    <div class="nav-item" onclick="scrollToTop()">
-      👤 Akun
+    <div onclick="scrollToTop()">
+      👤 Account
     </div>
+
   </div>
+
 </nav>
 
 
@@ -420,29 +523,27 @@ nav{
 let currentUser = null;
 
 
-/* =========================
-   HELPER
-========================= */
+/* API */
 
-async function api(url, options = {}) {
+async function api(url, options = {}){
 
-  const response = await fetch(url, {
-    credentials: "same-origin",
+  const response = await fetch(url,{
+    credentials:"same-origin",
     ...options,
-    headers: {
-      "Content-Type": "application/json",
+    headers:{
+      "Content-Type":"application/json",
       ...(options.headers || {})
     }
   });
 
   let data;
 
-  try {
+  try{
     data = await response.json();
-  } catch {
+  }catch{
     data = {
       ok:false,
-      error:"Server mengembalikan response yang tidak valid."
+      error:"Response server tidak valid."
     };
   }
 
@@ -453,268 +554,196 @@ async function api(url, options = {}) {
 }
 
 
-/* =========================
-   LOGIN
-========================= */
+/* LOGIN */
 
 async function login(){
 
-  const email =
-    document.getElementById("email").value.trim();
-
-  const password =
-    document.getElementById("password").value;
-
-  const message =
-    document.getElementById("authMessage");
+  const email=document.getElementById("email").value.trim();
+  const password=document.getElementById("password").value;
+  const message=document.getElementById("authMessage");
 
   if(!email || !password){
-
-    message.textContent =
-      "Email dan password wajib diisi.";
-
+    message.textContent="Email dan password wajib diisi.";
     return;
   }
 
-  message.textContent = "Sedang login...";
+  message.textContent="Sedang login...";
 
   try{
 
-    const result = await api("/api/login",{
+    const result=await api("/api/login",{
       method:"POST",
-      body:JSON.stringify({
-        email,
-        password
-      })
+      body:JSON.stringify({email,password})
     });
 
     if(!result.data.ok){
-
-      message.textContent =
-        result.data.error || "Login gagal.";
-
+      message.textContent=result.data.error || "Login gagal.";
       return;
     }
 
-    currentUser = result.data.user;
-
-    message.textContent = "Login berhasil!";
+    currentUser=result.data.user;
 
     showUser();
 
   }catch(error){
 
-    message.textContent =
-      "Tidak dapat terhubung ke server.";
-
+    message.textContent="Tidak dapat terhubung ke server.";
     console.error(error);
+
   }
 }
 
 
-/* =========================
-   REGISTER
-========================= */
+/* REGISTER */
 
 async function register(){
 
-  const email =
-    document.getElementById("email").value.trim();
-
-  const password =
-    document.getElementById("password").value;
-
-  const message =
-    document.getElementById("authMessage");
+  const email=document.getElementById("email").value.trim();
+  const password=document.getElementById("password").value;
+  const message=document.getElementById("authMessage");
 
   if(!email || !password){
-
-    message.textContent =
-      "Email dan password wajib diisi.";
-
+    message.textContent="Email dan password wajib diisi.";
     return;
   }
 
-  message.textContent =
-    "Mendaftarkan akun...";
+  message.textContent="Mendaftarkan akun...";
 
   try{
 
-    const result = await api("/api/register",{
+    const result=await api("/api/register",{
       method:"POST",
-      body:JSON.stringify({
-        email,
-        password
-      })
+      body:JSON.stringify({email,password})
     });
 
     if(!result.data.ok){
-
-      message.textContent =
-        result.data.error || "Registrasi gagal.";
-
+      message.textContent=result.data.error || "Registrasi gagal.";
       return;
     }
 
-    message.textContent =
-      "Akun berhasil dibuat. Silakan login.";
+    message.textContent="Akun berhasil dibuat. Silakan login.";
 
   }catch(error){
 
-    message.textContent =
-      "Tidak dapat terhubung ke server.";
-
+    message.textContent="Tidak dapat terhubung ke server.";
     console.error(error);
+
   }
 }
 
 
-/* =========================
-   CHECK SESSION
-========================= */
+/* SESSION */
 
 async function checkSession(){
 
   try{
 
-    const result =
-      await api("/api/me");
+    const result=await api("/api/me");
 
     if(result.data.ok){
 
-      currentUser =
-        result.data.user;
-
+      currentUser=result.data.user;
       showUser();
 
     }else{
 
       showAuth();
+
     }
 
-  }catch(error){
+  }catch{
 
     showAuth();
 
-    console.error(error);
   }
 }
 
 
-/* =========================
-   SHOW USER
-========================= */
+/* SHOW USER */
 
 function showUser(){
 
-  document
-    .getElementById("authSection")
-    .classList.add("hidden");
-
-  document
-    .getElementById("userSection")
-    .classList.remove("hidden");
-
-  document
-    .getElementById("coinDisplay")
-    .classList.remove("hidden");
+  document.getElementById("authSection").classList.add("hidden");
+  document.getElementById("userSection").classList.remove("hidden");
+  document.getElementById("coinDisplay").classList.remove("hidden");
 
   updateCoins();
 
   loadBoxes();
-
   loadInventory();
 }
 
 
-/* =========================
-   SHOW AUTH
-========================= */
+/* SHOW AUTH */
 
 function showAuth(){
 
-  document
-    .getElementById("authSection")
-    .classList.remove("hidden");
-
-  document
-    .getElementById("userSection")
-    .classList.add("hidden");
-
-  document
-    .getElementById("coinDisplay")
-    .classList.add("hidden");
+  document.getElementById("authSection").classList.remove("hidden");
+  document.getElementById("userSection").classList.add("hidden");
+  document.getElementById("coinDisplay").classList.add("hidden");
 }
 
 
-/* =========================
-   UPDATE COINS
-========================= */
+/* COINS */
 
 function updateCoins(){
 
-  if(!currentUser) return;
-
-  document
-    .getElementById("coins")
-    .textContent =
-      Number(currentUser.coins || 0).toLocaleString("id-ID");
+  document.getElementById("coins").textContent =
+    Number(currentUser?.coins || 0).toLocaleString("id-ID");
 }
 
 
-/* =========================
-   LOAD BOXES
-========================= */
+/* LOAD BOXES */
 
 async function loadBoxes(){
 
-  const container =
-    document.getElementById("boxes");
+  const container=document.getElementById("boxes");
 
-  container.innerHTML =
-    `<div class="card muted">Memuat box...</div>`;
+  container.innerHTML=
+    `<div class="card empty">Memuat box...</div>`;
 
   try{
 
-    const result =
-      await api("/api/boxes");
+    const result=await api("/api/boxes");
 
     if(!result.data.ok){
-
-      container.innerHTML =
-        `<div class="card muted">
+      container.innerHTML=
+        `<div class="card empty">
           ${escapeHtml(result.data.error || "Gagal memuat box.")}
         </div>`;
-
       return;
     }
 
-    const boxes =
-      result.data.boxes || [];
+    const boxes=result.data.boxes || [];
 
-    if(boxes.length === 0){
+    if(!boxes.length){
 
-      container.innerHTML =
-        `<div class="card muted">
-          Belum ada gacha box.
+      container.innerHTML=
+        `<div class="card empty">
+          Belum ada mystery box.
         </div>`;
 
       return;
     }
 
-    container.innerHTML =
-      boxes.map(box => `
+    container.innerHTML=boxes.map(box=>`
 
-        <div class="card box-card">
+      <div class="card box-card">
 
-          <div class="box-info">
+        <div class="box-top">
+
+          <div class="box-art">
+            🎁
+          </div>
+
+          <div>
 
             <div class="box-name">
-              🎁 ${escapeHtml(box.name)}
+              ${escapeHtml(box.name)}
             </div>
 
-            <div class="muted">
-              ${escapeHtml(box.description || "Gacha collectible")}
+            <div class="description">
+              ${escapeHtml(box.description || "Mystery collectible")}
             </div>
 
             <div class="price">
@@ -723,21 +752,30 @@ async function loadBoxes(){
 
           </div>
 
+        </div>
+
+        <div class="actions">
+
           <button
-            onclick="playGacha(${Number(box.id)}, '${escapeAttr(box.name)}', ${Number(box.price_coins)})"
-          >
-            Buka
+            onclick="playGacha(
+              ${Number(box.id)},
+              '${escapeAttr(box.name)}',
+              ${Number(box.price_coins)}
+            )">
+            🎲 Buka Box
           </button>
 
         </div>
 
-      `).join("");
+      </div>
+
+    `).join("");
 
   }catch(error){
 
-    container.innerHTML =
-      `<div class="card muted">
-        Gagal memuat gacha.
+    container.innerHTML=
+      `<div class="card empty">
+        Gagal memuat mystery box.
       </div>`;
 
     console.error(error);
@@ -745,124 +783,81 @@ async function loadBoxes(){
 }
 
 
-/* =========================
-   PLAY GACHA
-========================= */
+/* GACHA */
 
-async function playGacha(boxId, boxName, price){
+async function playGacha(boxId,boxName,price){
 
   if(!currentUser){
-
     alert("Silakan login terlebih dahulu.");
-
     return;
   }
 
-  if(Number(currentUser.coins) < Number(price)){
+  if(Number(currentUser.coins)<Number(price)){
 
     alert(
       "Coins tidak cukup.\n\n" +
-      "Harga: " +
-      Number(price).toLocaleString("id-ID") +
-      "\nSaldo: " +
-      Number(currentUser.coins).toLocaleString("id-ID")
+      "Harga: "+Number(price).toLocaleString("id-ID")+
+      "\nSaldo: "+Number(currentUser.coins).toLocaleString("id-ID")
     );
 
     return;
   }
 
-  const confirmed =
-    confirm(
-      "Buka " + boxName + "?\n\n" +
-      "Harga: " +
-      Number(price).toLocaleString("id-ID") +
-      " coins"
-    );
+  if(!confirm(
+    "Buka "+boxName+"?\n\n"+
+    "Harga: "+Number(price).toLocaleString("id-ID")+" coins"
+  )) return;
 
-  if(!confirmed) return;
-
-  const buttons =
-    document.querySelectorAll("#boxes button");
-
-  buttons.forEach(button => {
-    button.disabled = true;
-  });
+  document.querySelectorAll("#boxes button")
+    .forEach(button=>button.disabled=true);
 
   try{
 
-    const result =
-      await api("/api/gacha",{
-        method:"POST",
-        body:JSON.stringify({
-          box_id:boxId
-        })
-      });
+    const result=await api("/api/gacha",{
+      method:"POST",
+      body:JSON.stringify({box_id:boxId})
+    });
 
     if(!result.data.ok){
 
-      alert(
-        result.data.error ||
-        "Gacha gagal."
-      );
-
+      alert(result.data.error || "Gacha gagal.");
       return;
     }
 
-    const data =
-      result.data;
-
-    currentUser =
-      data.user;
+    currentUser=result.data.user;
 
     updateCoins();
 
-    showReward(
-      data.reward
-    );
+    showReward(result.data.reward);
 
     await loadInventory();
-
     await loadBoxes();
 
   }catch(error){
 
-    alert(
-      "Terjadi kesalahan saat membuka gacha."
-    );
-
+    alert("Terjadi kesalahan saat membuka gacha.");
     console.error(error);
 
   }finally{
 
-    document
-      .querySelectorAll("#boxes button")
-      .forEach(button => {
-        button.disabled = false;
-      });
+    document.querySelectorAll("#boxes button")
+      .forEach(button=>button.disabled=false);
+
   }
 }
 
 
-/* =========================
-   SHOW REWARD
-========================= */
+/* REWARD */
 
 function showReward(reward){
 
-  const section =
-    document.getElementById("rewardSection");
+  document.getElementById("rewardName").textContent =
+    reward.name || "Mystery Item";
 
-  document
-    .getElementById("rewardName")
-    .textContent =
-      reward.name || "Mystery Item";
+  document.getElementById("rewardProbability").textContent =
+    "Probability: "+Number(reward.probability || 0)+"%";
 
-  document
-    .getElementById("rewardProbability")
-    .textContent =
-      "Probability: " +
-      Number(reward.probability || 0) +
-      "%";
+  const section=document.getElementById("rewardSection");
 
   section.classList.remove("hidden");
 
@@ -873,77 +868,73 @@ function showReward(reward){
 }
 
 
-/* =========================
-   LOAD INVENTORY
-========================= */
+/* INVENTORY */
 
 async function loadInventory(){
 
-  const container =
-    document.getElementById("inventory");
+  const container=document.getElementById("inventory");
 
-  container.innerHTML =
-    `<div class="card muted">
-      Memuat inventory...
-    </div>`;
+  container.innerHTML=
+    `<div class="card empty">Memuat inventory...</div>`;
 
   try{
 
-    const result =
-      await api("/api/inventory");
+    const result=await api("/api/inventory");
 
     if(!result.data.ok){
 
-      container.innerHTML =
-        `<div class="card muted">
+      container.innerHTML=
+        `<div class="card empty">
           ${escapeHtml(result.data.error || "Gagal memuat inventory.")}
         </div>`;
 
       return;
     }
 
-    const items =
-      result.data.inventory || [];
+    const items=result.data.inventory || [];
 
-    if(items.length === 0){
+    if(!items.length){
 
-      container.innerHTML =
-        `<div class="card muted">
+      container.innerHTML=
+        `<div class="card empty">
           Inventory masih kosong.
         </div>`;
 
       return;
     }
 
-    container.innerHTML =
-      items.map(item => `
+    container.innerHTML=items.map(item=>`
 
-        <div class="card inventory-item">
+      <div class="card inventory-item">
 
-          <div>
+        <div class="item-icon">
+          🎁
+        </div>
 
-            <div style="font-weight:800">
-              🎁 ${escapeHtml(item.name)}
-            </div>
+        <div class="item-info">
 
-            <div class="muted">
-              ${escapeHtml(item.created_at || "")}
-            </div>
-
+          <div class="item-name">
+            ${escapeHtml(item.name)}
           </div>
 
-          <div class="status">
-            ${escapeHtml(item.status || "won")}
+          <div class="item-date">
+            ${escapeHtml(item.created_at || "")}
           </div>
 
         </div>
 
-      `).join("");
+        <div class="status">
+          ${escapeHtml(item.status || "won")}
+        </div>
+
+      </div>
+
+    `).join("");
 
   }catch(error){
 
-    container.innerHTML =
-      `<div class="card muted">
+    container.innerHTML=
+      `<div class="card empty">
         Gagal memuat inventory.
       </div>`;
 
@@ -952,9 +943,7 @@ async function loadInventory(){
 }
 
 
-/* =========================
-   LOGOUT
-========================= */
+/* LOGOUT */
 
 async function logout(){
 
@@ -964,40 +953,22 @@ async function logout(){
       method:"POST"
     });
 
-  }catch(error){
-
-    console.error(error);
-
   }finally{
 
-    currentUser = null;
+    currentUser=null;
 
     showAuth();
-
-    document
-      .getElementById("email")
-      .value = "";
-
-    document
-      .getElementById("password")
-      .value = "";
-
-    document
-      .getElementById("authMessage")
-      .textContent =
-        "Kamu sudah logout.";
 
     window.scrollTo({
       top:0,
       behavior:"smooth"
     });
+
   }
 }
 
 
-/* =========================
-   ESCAPE HTML
-========================= */
+/* ESCAPE */
 
 function escapeHtml(value){
 
@@ -1009,7 +980,6 @@ function escapeHtml(value){
     .replace(/'/g,"&#039;");
 }
 
-
 function escapeAttr(value){
 
   return String(value ?? "")
@@ -1018,9 +988,7 @@ function escapeAttr(value){
 }
 
 
-/* =========================
-   NAVIGATION
-========================= */
+/* NAV */
 
 function scrollToTop(){
 
@@ -1028,40 +996,29 @@ function scrollToTop(){
     top:0,
     behavior:"smooth"
   });
-}
 
+}
 
 function scrollToGacha(){
 
-  const element =
-    document.getElementById("boxes");
-
-  if(element){
-
-    element.scrollIntoView({
+  document.getElementById("gachaSection")
+    .scrollIntoView({
       behavior:"smooth"
     });
-  }
-}
 
+}
 
 function scrollToInventory(){
 
-  const element =
-    document.getElementById("inventory");
-
-  if(element){
-
-    element.scrollIntoView({
+  document.getElementById("inventorySection")
+    .scrollIntoView({
       behavior:"smooth"
     });
-  }
+
 }
 
 
-/* =========================
-   START
-========================= */
+/* START */
 
 checkSession();
 
@@ -1069,4 +1026,3 @@ checkSession();
 
 </body>
 </html>
-
