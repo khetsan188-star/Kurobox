@@ -983,29 +983,29 @@ async function handleAddress(request, env) {
     );
   }
 
- try {
-  await env.DB
-    .prepare(`
-      INSERT INTO user_addresses (
-        user_id,
-        recipient_name,
-        phone,
-        address,
-        city,
-        province,
-        postal_code
-      )
-      VALUES (?, ?, ?, ?, ?, ?, ?)
-      ON CONFLICT(user_id)
-      DO UPDATE SET
-        recipient_name = excluded.recipient_name,
-        phone = excluded.phone,
-        address = excluded.address,
-        city = excluded.city,
-        province = excluded.province,
-        postal_code = excluded.postal_code,
-        updated_at = CURRENT_TIMESTAMP
-    `)
+  try {
+    await env.DB
+      .prepare(`
+        INSERT INTO user_addresses (
+          user_id,
+          recipient_name,
+          phone,
+          address,
+          city,
+          province,
+          postal_code
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+        ON CONFLICT(user_id)
+        DO UPDATE SET
+          recipient_name = excluded.recipient_name,
+          phone = excluded.phone,
+          address = excluded.address,
+          city = excluded.city,
+          province = excluded.province,
+          postal_code = excluded.postal_code,
+          updated_at = CURRENT_TIMESTAMP
+      `)
       .bind(
         user.id,
         recipientName,
@@ -1096,7 +1096,6 @@ async function handleRequest(request, env) {
 
   return null;
 }
-
 export default {
   async fetch(request, env) {
     try {
