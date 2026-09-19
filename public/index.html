@@ -1079,10 +1079,8 @@ async function playTone(
 
 async function playGachaSound(){
 
+  await getAudioContext();
 
-  getAudioContext();
-
-  // suara mulai
   playTone(220,0.15,"sine",0.06);
 
   setTimeout(()=>{
@@ -1097,7 +1095,6 @@ async function playGachaSound(){
     playTone(550,0.18,"triangle",0.09);
   },450);
 
-  // suara reveal
   setTimeout(()=>{
     playTone(880,0.25,"triangle",0.12);
     playTone(1100,0.35,"sine",0.08);
@@ -1141,6 +1138,7 @@ blindBox.classList.remove("open");
 blindBox.classList.add("shake");
 
 openingText.textContent = "🎁 Membuka Blind Box...";
+    await playGachaSound();
     const result=await api("/api/gacha",{
       method:"POST",
       body:JSON.stringify({box_id:boxId})
