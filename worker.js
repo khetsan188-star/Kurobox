@@ -68,7 +68,10 @@ async function createPasswordHash(password) {
 
 async function verifyPassword(password, stored) {
   const [salt64, savedHash] = stored.split(":");
-  if (!salt64 || !savedHash) return false;
+
+  if (!salt64 || !savedHash) {
+    return false;
+  }
 
   const salt = base64ToBytes(salt64);
   const hash = await hashPassword(password, salt);
@@ -78,7 +81,10 @@ async function verifyPassword(password, stored) {
 
 async function getUser(request, env) {
   const token = getCookie(request, "kurobox_session");
-  if (!token || !env.DB) return null;
+
+  if (!token || !env.DB) {
+    return null;
+  }
 
   const result = await env.DB
     .prepare(`
@@ -109,15 +115,21 @@ export default {
       return json({
         ok: true,
         app: "KuroBox",
-        version: "v8",
+        version: "v9",
         database: Boolean(env.DB)
       });
     }
 
+    // =========================
+    // CEK DATABASE
+    // =========================
     if (!env.DB) {
       if (url.pathname.startsWith("/api/")) {
         return json(
-          { ok: false, error: "D1 database belum terhubung" },
+          {
+            ok: false,
+            error: "D1 database belum terhubung"
+          },
           500
         );
       }
@@ -129,40 +141,60 @@ export default {
     if (url.pathname === "/api/register" && request.method === "POST") {
       try {
         const body = await request.json();
-        const email = String(body.email || "").trim().toLowerCase();
+
+        const email = String(body.email || "")
+          .trim()
+          .toLowerCase();
+
         const password = String(body.password || "");
 
         if (!email || !password) {
           return json(
-            { ok: false, error: "Email dan password wajib diisi" },
+            {
+              ok: false,
+              error: "Email dan password wajib diisi"
+            },
             400
           );
         }
 
         if (password.length < 6) {
           return json(
-            { ok: false, error: "Password minimal 6 karakter" },
+            {
+              ok: false,
+              error: "Password minimal 6 karakter"
+            },
             400
           );
         }
 
         const existing = await env.DB
-          .prepare("SELECT id FROM users WHERE email = ?")
+          .prepare(
+            "SELECT id FROM users WHERE email = ?"
+          )
           .bind(email)
           .first();
 
         if (existing) {
           return json(
-            { ok: false, error: "Email sudah terdaftar" },
+            {
+              ok: false,
+              error: "Email sudah terdaftar"
+            },
             409
           );
         }
 
-        const passwordHash = await createPasswordHash(password);
+        const passwordHash =
+          await createPasswordHash(password);
 
         const result = await env.DB
           .prepare(`
-            INSERT INTO users (email, password_hash, coins)
+            INSERT INTO users (
+              email,
+              password_hash,
+              coins
+            )
             VALUES (?, ?, 0)
           `)
           .bind(email, passwordHash)
@@ -175,7 +207,10 @@ export default {
         });
       } catch (error) {
         return json(
-          { ok: false, error: error.message },
+          {
+            ok: false,
+            error: error.message
+          },
           500
         );
       }
@@ -187,12 +222,20 @@ export default {
     if (url.pathname === "/api/login" && request.method === "POST") {
       try {
         const body = await request.json();
-        const email = String(body.email || "").trim().toLowerCase();
+
+        const email = String(body.email || "")
+          .trim()
+          .toLowerCase();
+
         const password = String(body.password || "");
 
         const user = await env.DB
           .prepare(`
-            SELECT id, email, password_hash, coins
+            SELECT
+              id,
+              email,
+              password_hash,
+              coins
             FROM users
             WHERE email = ?
             LIMIT 1
@@ -200,9 +243,18 @@ export default {
           .bind(email)
           .first();
 
-        if (!user || !(await verifyPassword(password, user.password_hash))) {
+        if (
+          !user ||
+          !(await verifyPassword(
+            password,
+            user.password_hash
+          ))
+        ) {
           return json(
-            { ok: false, error: "Email atau password salah" },
+            {
+              ok: false,
+              error: "Email atau password salah"
+            },
             401
           );
         }
@@ -211,8 +263,16 @@ export default {
 
         await env.DB
           .prepare(`
-            INSERT INTO sessions (user_id, token, expires_at)
-            VALUES (?, ?, datetime('now', '+7 days'))
+            INSERT INTO sessions (
+              user_id,
+              token,
+              expires_at
+            )
+            VALUES (
+              ?,
+              ?,
+              datetime('now', '+7 days')
+            )
           `)
           .bind(user.id, token)
           .run();
@@ -235,7 +295,10 @@ export default {
         );
       } catch (error) {
         return json(
-          { ok: false, error: error.message },
+          {
+            ok: false,
+            error: error.message
+          },
           500
         );
       }
@@ -245,17 +308,24 @@ export default {
     // LOGOUT
     // =========================
     if (url.pathname === "/api/logout" && request.method === "POST") {
-      const token = getCookie(request, "kurobox_session");
+      const token = getCookie(
+        request,
+        "kurobox_session"
+      );
 
       if (token) {
         await env.DB
-          .prepare("DELETE FROM sessions WHERE token = ?")
+          .prepare(
+            "DELETE FROM sessions WHERE token = ?"
+          )
           .bind(token)
           .run();
       }
 
       return json(
-        { ok: true },
+        {
+          ok: true
+        },
         200,
         {
           "Set-Cookie":
@@ -272,7 +342,10 @@ export default {
 
       if (!user) {
         return json(
-          { ok: false, error: "Belum login" },
+          {
+            ok: false,
+            error: "Belum login"
+          },
           401
         );
       }
@@ -293,7 +366,8 @@ export default {
             SELECT
               id,
               name,
-              cost_coins,
+              description,
+              price_coins,
               active
             FROM gacha_boxes
             WHERE active = 1
@@ -307,7 +381,10 @@ export default {
         });
       } catch (error) {
         return json(
-          { ok: false, error: error.message },
+          {
+            ok: false,
+            error: error.message
+          },
           500
         );
       }
@@ -321,7 +398,10 @@ export default {
 
       if (!boxId) {
         return json(
-          { ok: false, error: "box_id wajib diisi" },
+          {
+            ok: false,
+            error: "box_id wajib diisi"
+          },
           400
         );
       }
@@ -333,7 +413,7 @@ export default {
               id,
               box_id,
               name,
-              rarity,
+              image_url,
               probability,
               stock
             FROM gacha_items
@@ -349,7 +429,10 @@ export default {
         });
       } catch (error) {
         return json(
-          { ok: false, error: error.message },
+          {
+            ok: false,
+            error: error.message
+          },
           500
         );
       }
@@ -358,13 +441,19 @@ export default {
     // =========================
     // GACHA
     // =========================
-    if (url.pathname === "/api/gacha" && request.method === "POST") {
+    if (
+      url.pathname === "/api/gacha" &&
+      request.method === "POST"
+    ) {
       try {
         const user = await getUser(request, env);
 
         if (!user) {
           return json(
-            { ok: false, error: "Silakan login terlebih dahulu" },
+            {
+              ok: false,
+              error: "Silakan login terlebih dahulu"
+            },
             401
           );
         }
@@ -374,16 +463,25 @@ export default {
 
         if (!Number.isInteger(boxId)) {
           return json(
-            { ok: false, error: "box_id tidak valid" },
+            {
+              ok: false,
+              error: "box_id tidak valid"
+            },
             400
           );
         }
 
+        // Ambil box
         const box = await env.DB
           .prepare(`
-            SELECT id, name, cost_coins
+            SELECT
+              id,
+              name,
+              description,
+              price_coins
             FROM gacha_boxes
-            WHERE id = ? AND active = 1
+            WHERE id = ?
+              AND active = 1
             LIMIT 1
           `)
           .bind(boxId)
@@ -391,17 +489,21 @@ export default {
 
         if (!box) {
           return json(
-            { ok: false, error: "Box tidak ditemukan" },
+            {
+              ok: false,
+              error: "Box tidak ditemukan"
+            },
             404
           );
         }
 
+        // Ambil hadiah yang masih tersedia
         const itemsResult = await env.DB
           .prepare(`
             SELECT
               id,
               name,
-              rarity,
+              image_url,
               probability,
               stock
             FROM gacha_items
@@ -416,19 +518,39 @@ export default {
 
         if (items.length === 0) {
           return json(
-            { ok: false, error: "Tidak ada hadiah yang tersedia di box ini" },
+            {
+              ok: false,
+              error:
+                "Tidak ada hadiah yang tersedia di box ini"
+            },
             400
           );
         }
 
-        // Weighted random berdasarkan probability
+        // =========================
+        // WEIGHTED RANDOM
+        // =========================
         const totalProbability = items.reduce(
-          (sum, item) => sum + Number(item.probability),
+          (sum, item) =>
+            sum + Number(item.probability),
           0
         );
 
-        let random = Math.random() * totalProbability;
-        let selected = items[items.length - 1];
+        if (totalProbability <= 0) {
+          return json(
+            {
+              ok: false,
+              error: "Probability hadiah tidak valid"
+            },
+            500
+          );
+        }
+
+        let random =
+          Math.random() * totalProbability;
+
+        let selected =
+          items[items.length - 1];
 
         for (const item of items) {
           random -= Number(item.probability);
@@ -439,7 +561,9 @@ export default {
           }
         }
 
-        // Kurangi coin secara aman
+        // =========================
+        // KURANGI COIN
+        // =========================
         const coinUpdate = await env.DB
           .prepare(`
             UPDATE users
@@ -447,7 +571,11 @@ export default {
             WHERE id = ?
               AND coins >= ?
           `)
-          .bind(box.cost_coins, user.id, box.cost_coins)
+          .bind(
+            box.price_coins,
+            user.id,
+            box.price_coins
+          )
           .run();
 
         if (!coinUpdate.meta.changes) {
@@ -455,13 +583,15 @@ export default {
             {
               ok: false,
               error: "Coin tidak cukup",
-              required: box.cost_coins
+              required: box.price_coins
             },
             400
           );
         }
 
-        // Kurangi stock
+        // =========================
+        // KURANGI STOCK
+        // =========================
         const stockUpdate = await env.DB
           .prepare(`
             UPDATE gacha_items
@@ -473,51 +603,76 @@ export default {
           .run();
 
         if (!stockUpdate.meta.changes) {
-          // Refund kalau stock keburu habis
+          // Refund coin
           await env.DB
             .prepare(`
               UPDATE users
               SET coins = coins + ?
               WHERE id = ?
             `)
-            .bind(box.cost_coins, user.id)
+            .bind(
+              box.price_coins,
+              user.id
+            )
             .run();
 
           return json(
             {
               ok: false,
-              error: "Hadiah tersebut baru saja habis. Silakan coba lagi."
+              error:
+                "Hadiah tersebut baru saja habis. Silakan coba lagi."
             },
             409
           );
         }
 
-        // Simpan hadiah
+        // =========================
+        // SIMPAN INVENTORY
+        // =========================
         await env.DB
           .prepare(`
-            INSERT INTO inventory (user_id, item_id, status)
+            INSERT INTO inventory (
+              user_id,
+              item_id,
+              status
+            )
             VALUES (?, ?, 'won')
           `)
-          .bind(user.id, selected.id)
+          .bind(
+            user.id,
+            selected.id
+          )
           .run();
 
-        // Catat coin
+        // =========================
+        // COIN LEDGER
+        // =========================
         await env.DB
           .prepare(`
-            INSERT INTO coin_ledger
-              (user_id, amount, type, reference)
+            INSERT INTO coin_ledger (
+              user_id,
+              amount,
+              type,
+              reference
+            )
             VALUES (?, ?, 'gacha', ?)
           `)
           .bind(
             user.id,
-            -box.cost_coins,
+            -box.price_coins,
             `box:${box.id}:item:${selected.id}`
           )
           .run();
 
+        // =========================
+        // USER TERBARU
+        // =========================
         const newUser = await env.DB
           .prepare(`
-            SELECT id, email, coins
+            SELECT
+              id,
+              email,
+              coins
             FROM users
             WHERE id = ?
           `)
@@ -529,18 +684,24 @@ export default {
           message: "Gacha berhasil!",
           box: {
             id: box.id,
-            name: box.name
+            name: box.name,
+            description: box.description,
+            price_coins: box.price_coins
           },
           reward: {
             id: selected.id,
             name: selected.name,
-            rarity: selected.rarity
+            image_url: selected.image_url,
+            probability: selected.probability
           },
           user: newUser
         });
       } catch (error) {
         return json(
-          { ok: false, error: error.message },
+          {
+            ok: false,
+            error: error.message
+          },
           500
         );
       }
@@ -555,7 +716,10 @@ export default {
 
         if (!user) {
           return json(
-            { ok: false, error: "Silakan login terlebih dahulu" },
+            {
+              ok: false,
+              error: "Silakan login terlebih dahulu"
+            },
             401
           );
         }
@@ -567,10 +731,11 @@ export default {
               i.status,
               i.created_at,
               g.name,
-              g.rarity,
-              g.image_url
+              g.image_url,
+              g.probability
             FROM inventory i
-            JOIN gacha_items g ON g.id = i.item_id
+            JOIN gacha_items g
+              ON g.id = i.item_id
             WHERE i.user_id = ?
             ORDER BY i.id DESC
           `)
@@ -583,7 +748,10 @@ export default {
         });
       } catch (error) {
         return json(
-          { ok: false, error: error.message },
+          {
+            ok: false,
+            error: error.message
+          },
           500
         );
       }
@@ -596,10 +764,13 @@ export default {
       return env.ASSETS.fetch(request);
     }
 
-    return new Response("KuroBox is running.", {
-      headers: {
-        "content-type": "text/plain"
+    return new Response(
+      "KuroBox is running.",
+      {
+        headers: {
+          "content-type": "text/plain"
+        }
       }
-    });
+    );
   }
 };
