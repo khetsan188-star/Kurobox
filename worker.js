@@ -395,8 +395,23 @@ async function handleLogin(request, env) {
     );
   }
 
-  const body = await readJson(request);
-  try {
+const body = await readJson(request);
+
+if (!body) {
+  return errorResponse("Body JSON tidak valid.");
+}
+
+const email = String(body.email || "").trim().toLowerCase();
+const password = body.password;
+
+if (!validEmail(email) || typeof password !== "string") {
+  return errorResponse(
+    "Email atau password tidak valid.",
+    401
+  );
+}
+
+try {  try {
     const user = await env.DB
       .prepare(`
         SELECT
