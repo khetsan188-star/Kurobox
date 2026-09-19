@@ -197,39 +197,6 @@ async function getUser(request, env) {
     return null;
   }
 
-await env.DB
-  .prepare(`
-    INSERT INTO user_addresses (
-      user_id,
-      recipient_name,
-      phone,
-      address,
-      city,
-      province,
-      postal_code
-    )
-    VALUES (?, ?, ?, ?, ?, ?, ?)
-    ON CONFLICT(user_id)
-    DO UPDATE SET
-      recipient_name = excluded.recipient_name,
-      phone = excluded.phone,
-      address = excluded.address,
-      city = excluded.city,
-      province = excluded.province,
-      postal_code = excluded.postal_code,
-      updated_at = CURRENT_TIMESTAMP
-  `)
-  .bind(
-    user.id,
-    recipientName,
-    phone,
-    address,
-    city,
-    province,
-    postalCode
-  )
-  .run();
-
 async function readJson(request) {
   try {
     return await request.json();
@@ -944,112 +911,62 @@ async function handleInventory(request, env) {
     );
   }
 }
-```js
-async function handleAddress(request, env) {
-  const user = await getUser(request, env);
+async function getUser(request, env) {
+  const token = getCookie(request, "session");
 
-  if (!user) {
-    return errorResponse(
-      "Silakan login terlebih dahulu.",
-      401
-    );
-  }
-
-  const body = await readJson(request);
-
-  if (!body) {
-    return errorResponse(
-      "Body JSON tidak valid."
-    );
-  }
-
-  const recipientName = String(body.recipient_name || "").trim();
-  const phone = String(body.phone || "").trim();
-  const address = String(body.address || "").trim();
-  const city = String(body.city || "").trim();
-  const province = String(body.province || "").trim();
-  const postalCode = String(body.postal_code || "").trim();
-
-  if (
-    !recipientName ||
-    !phone ||
-    !address ||
-    !city ||
-    !province ||
-    !postalCode
-  ) {
-    return errorResponse(
-      "Semua data alamat wajib diisi."
-    );
+  if (!token) {
+    return null;
   }
 
   try {
-    await env.DB
-      .prepare(`
-        INSERT INTO user_addresses (
-          user_id,
-          recipient_name,
-          phone,
-          address,
-          city,
-          province,
-          postal_code
-        )
-        VALUES (?, ?, ?, ?, ?, ?, ?)
-        ON CONFLICT(user_id)
-        DO UPDATE SET
-          recipient_name = excluded.recipient_name,
-          phone = excluded.phone,
-          address = excluded.address,
-          city = excluded.city,
-          province = excluded.province,
-          postal_code = excluded.postal_code,
-          updated_at = CURRENT_TIMESTAMP
-      `)
-      .bind(
-        user.id,
-        recipientName,
-        phone,
-        address,
-        city,
-        province,
-        postalCode
-      )
-      .run();
-
-    const savedAddress = await env.DB
+    const session = await env.DB
       .prepare(`
         SELECT
-          id,
-          recipient_name,
-          phone,
-          address,
-          city,
-          province,
-          postal_code,
-          created_at,
-          updated_at
-        FROM user_addresses
-        WHERE user_id = ?
+          s.user_id,
+          s.expires_at,
+          u.id,
+          u.email,
+          u.coins
+        FROM sessions s
+        JOIN users u
+          ON u.id = s.user_id
+        WHERE s.token = ?
         LIMIT 1
       `)
-      .bind(user.id)
+      .bind(token)
       .first();
 
-    return json({
-      ok: true,
-      message: "Alamat berhasil disimpan.",
-      address: savedAddress
-    });
+    if (!session) {
+      return null;
+    }
 
-  } catch (error) {
-    return errorResponse(
-      error?.message || "Gagal menyimpan alamat.",
-      500
-    );
+    if (
+      session.expires_at &&
+      new Date(session.expires_at).getTime() <= Date.now()
+    ) {
+      await env.DB
+        .prepare(`
+          DELETE FROM sessions
+          WHERE token = ?
+        `)
+        .bind(token)
+        .run();
+
+      return null;
+    }
+
+    return {
+      id: session.id,
+      email: session.email,
+      coins: Number(session.coins)
+    };
+
+  } catch {
+    return null;
   }
 }
 
+async function readJson(request) {
 async function handleRequest(request, env) {
   const url = new URL(request.url);
   const path = url.pathname;
