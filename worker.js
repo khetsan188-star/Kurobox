@@ -382,22 +382,20 @@ async function handleRegister(request, env) {
 }
 
 async function handleLogin(request, env) {
-  const body = await readJson(request);
+  const ip = request.headers.get("CF-Connecting-IP") || "unknown";
 
-  if (!body) {
-    return errorResponse("Body JSON tidak valid.");
-  }
+  const { success } = await env.LOGIN_LIMITER.limit({
+    key: `login:${ip}`
+  });
 
-  const email = String(body.email || "").trim().toLowerCase();
-  const password = body.password;
-
-  if (!validEmail(email) || typeof password !== "string") {
+  if (!success) {
     return errorResponse(
-      "Email atau password tidak valid.",
-      401
+      "Terlalu banyak percobaan login. Coba lagi nanti.",
+      429
     );
   }
 
+  const body = await readJson(request);
   try {
     const user = await env.DB
       .prepare(`
