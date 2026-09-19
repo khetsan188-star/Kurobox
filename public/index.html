@@ -1076,12 +1076,7 @@ async function playTone(
     ctx.currentTime + duration
   );
 }
-overlay.classList.remove("hidden");
 
-blindBox.classList.remove("open");
-blindBox.classList.add("shake");
-
-openingText.textContent = "🎁 Membuka Blind Box...";
 async function playGachaSound(){
 
   await getAudioContext();
