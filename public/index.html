@@ -1284,12 +1284,11 @@ async function playGacha(boxId,boxName,price){
     .forEach(button=>button.disabled=true);
 
   try{
-const overlay = document.getElementById("blindBoxOverlay");
-const blindBox = document.getElementById("blindBox");
+const blindOverlay = document.getElementById("blindBoxOverlay");
+    const blindBox = document.getElementById("blindBox");
 const openingText = document.getElementById("openingText");
 
-overlay.classList.remove("hidden");
-
+blindOverlay.classList.remove("hidden");
 blindBox.classList.remove("open");
 blindBox.classList.add("shake");
 
@@ -1310,14 +1309,14 @@ openingText.textContent = "🎁 Membuka Blind Box...";
  currentUser=result.data.user;
     const rarity = result.data.reward?.rarity || "Common";
 
-overlay.classList.remove(
+blindOverlay.classList.remove(
   "rarity-common",
   "rarity-rare",
   "rarity-epic",
   "rarity-legendary"
 );
 
-overlay.classList.add(
+blindOverlay.classList.add(
   "rarity-" + rarity.toLowerCase()
 );
 
@@ -1334,7 +1333,7 @@ setTimeout(() => {
 
 await new Promise(resolve => setTimeout(resolve, 1500));
 
-overlay.classList.add("hidden");
+blindOverlay.classList.add("hidden");
 
 showReward(result.data.reward);
 
