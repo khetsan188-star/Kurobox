@@ -929,10 +929,10 @@ async function handleInventory(request, env) {
     );
   }
 }
+```js
 async function handleAddress(request, env) {
   const user = await getUser(request, env);
 
-  if (!user) {
   if (!user) {
     return errorResponse(
       "Silakan login terlebih dahulu.",
@@ -947,7 +947,7 @@ async function handleAddress(request, env) {
       "Body JSON tidak valid."
     );
   }
-async function handleRequest(request, env) {
+
   const recipientName = String(body.recipient_name || "").trim();
   const phone = String(body.phone || "").trim();
   const address = String(body.address || "").trim();
@@ -1034,6 +1034,7 @@ async function handleRequest(request, env) {
     );
   }
 }
+
 async function handleRequest(request, env) {
   const url = new URL(request.url);
   const path = url.pathname;
@@ -1054,14 +1055,13 @@ async function handleRequest(request, env) {
     return handleLogout(request, env);
   }
 
-if (request.method === "GET" && path === "/api/me") {
-  return handleMe(request, env);
-}
+  if (request.method === "GET" && path === "/api/me") {
+    return handleMe(request, env);
+  }
 
-if (request.method === "PUT" && path === "/api/address") {
-  return handleAddress(request, env);
-}
-
+  if (request.method === "PUT" && path === "/api/address") {
+    return handleAddress(request, env);
+  }
 
   if (request.method === "GET" && path === "/api/boxes") {
     return handleBoxes(env);
@@ -1081,6 +1081,8 @@ if (request.method === "PUT" && path === "/api/address") {
 
   return null;
 }
+```
+
 
 export default {
   async fetch(request, env) {
