@@ -929,36 +929,10 @@ async function handleInventory(request, env) {
     );
   }
 }
-
-async function handleRequest(request, env) {
-  const url = new URL(request.url);
-  const path = url.pathname;
-
-  if (request.method === "GET" && path === "/api/health") {
-    return handleHealth(env);
-  }
-
-  if (request.method === "POST" && path === "/api/register") {
-    return handleRegister(request, env);
-  }
-
-  if (request.method === "POST" && path === "/api/login") {
-    return handleLogin(request, env);
-  }
-
-  if (request.method === "POST" && path === "/api/logout") {
-    return handleLogout(request, env);
-  }
-
-  if (request.method === "GET" && path === "/api/me") {
-    return handleMe(request, env);
-    if (request.method === "PUT" && path === "/api/address") {
-  return handleAddress(request, env);
-}
-  }
 async function handleAddress(request, env) {
   const user = await getUser(request, env);
 
+  if (!user) {
   if (!user) {
     return errorResponse(
       "Silakan login terlebih dahulu.",
@@ -1060,6 +1034,35 @@ async function handleAddress(request, env) {
     );
   }
 }
+async function handleRequest(request, env) {
+  const url = new URL(request.url);
+  const path = url.pathname;
+
+  if (request.method === "GET" && path === "/api/health") {
+    return handleHealth(env);
+  }
+
+  if (request.method === "POST" && path === "/api/register") {
+    return handleRegister(request, env);
+  }
+
+  if (request.method === "POST" && path === "/api/login") {
+    return handleLogin(request, env);
+  }
+
+  if (request.method === "POST" && path === "/api/logout") {
+    return handleLogout(request, env);
+  }
+
+if (request.method === "GET" && path === "/api/me") {
+  return handleMe(request, env);
+}
+
+if (request.method === "PUT" && path === "/api/address") {
+  return handleAddress(request, env);
+}
+
+
   if (request.method === "GET" && path === "/api/boxes") {
     return handleBoxes(env);
   }
