@@ -652,11 +652,12 @@ export default {
         INSERT INTO coin_ledger (user_id, amount, type, description)
 VALUES (?, ?, ?, ?)
           `)
-          .bind(
-            user.id,
-            -box.price_coins,
-            `box:${box.id}:item:${selected.id}`
-          )
+         .bind(
+  user.id,
+  -box.price_coins,
+  "gacha",
+  `box:${box.id}:item:${selected.id}`
+)
           .run();
 
         // =========================
