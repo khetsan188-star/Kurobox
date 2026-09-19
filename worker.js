@@ -1,44 +1,82 @@
+const SESSION_DAYS = 30;
+const PBKDF2_ITERATIONS = 100000;
+const PBKDF2_HASH = "SHA-256";
+const PBKDF2_SALT_LENGTH = 16;
+
 function json(data, status = 200, extraHeaders = {}) {
   return new Response(JSON.stringify(data), {
     status,
     headers: {
-      "content-type": "application/json; charset=utf-8",
+      "Content-Type": "application/json; charset=utf-8",
+      "Cache-Control": "no-store",
       ...extraHeaders
     }
   });
 }
 
+function errorResponse(message, status = 400) {
+  return json({
+    ok: false,
+    error: message
+  }, status);
+}
+
 function getCookie(request, name) {
   const cookie = request.headers.get("Cookie") || "";
-  const match = cookie.match(
-    new RegExp("(^|;\\s*)" + name + "=([^;]*)")
-  );
-  return match ? decodeURIComponent(match[2]) : null;
+
+  const parts = cookie.split(";").map(v => v.trim());
+
+  for (const part of parts) {
+    const index = part.indexOf("=");
+
+    if (index === -1) continue;
+
+    const key = part.slice(0, index);
+    const value = part.slice(index + 1);
+
+    if (key === name) {
+      return decodeURIComponent(value);
+    }
+  }
+
+  return null;
 }
 
-function makeToken() {
-  return crypto.randomUUID() + crypto.randomUUID();
-}
+function createToken() {
+  const bytes = new Uint8Array(32);
+  crypto.getRandomValues(bytes);
 
-function makeSalt() {
-  const salt = new Uint8Array(16);
-  crypto.getRandomValues(salt);
-  return salt;
+  return Array.from(bytes)
+    .map(b => b.toString(16).padStart(2, "0"))
+    .join("");
 }
 
 function bytesToBase64(bytes) {
   let binary = "";
-  for (const b of bytes) binary += String.fromCharCode(b);
+
+  for (const byte of bytes) {
+    binary += String.fromCharCode(byte);
+  }
+
   return btoa(binary);
 }
 
-function base64ToBytes(str) {
-  const binary = atob(str);
-  return Uint8Array.from(binary, c => c.charCodeAt(0));
+function base64ToBytes(base64) {
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+
+  return bytes;
 }
 
-async function hashPassword(password, salt) {
-  const key = await crypto.subtle.importKey(
+async function hashPassword(password) {
+  const salt = new Uint8Array(PBKDF2_SALT_LENGTH);
+  crypto.getRandomValues(salt);
+
+  const keyMaterial = await crypto.subtle.importKey(
     "raw",
     new TextEncoder().encode(password),
     "PBKDF2",
@@ -46,43 +84,90 @@ async function hashPassword(password, salt) {
     ["deriveBits"]
   );
 
-  const bits = await crypto.subtle.deriveBits(
+  const derivedBits = await crypto.subtle.deriveBits(
     {
       name: "PBKDF2",
       salt,
-      iterations: 100000,
-      hash: "SHA-256"
+      iterations: PBKDF2_ITERATIONS,
+      hash: PBKDF2_HASH
     },
-    key,
+    keyMaterial,
     256
   );
 
-  return bytesToBase64(new Uint8Array(bits));
+  return `pbkdf2$${PBKDF2_ITERATIONS}$${bytesToBase64(salt)}$${bytesToBase64(new Uint8Array(derivedBits))}`;
 }
 
-async function createPasswordHash(password) {
-  const salt = makeSalt();
-  const hash = await hashPassword(password, salt);
-  return `${bytesToBase64(salt)}:${hash}`;
-}
+async function verifyPassword(password, storedHash) {
+  try {
+    const parts = storedHash.split("$");
 
-async function verifyPassword(password, stored) {
-  const [salt64, savedHash] = stored.split(":");
+    if (parts.length !== 4) {
+      return false;
+    }
 
-  if (!salt64 || !savedHash) {
+    const algorithm = parts[0];
+    const iterations = Number(parts[1]);
+    const salt = base64ToBytes(parts[2]);
+    const expectedHash = base64ToBytes(parts[3]);
+
+    if (algorithm !== "pbkdf2") {
+      return false;
+    }
+
+    if (!Number.isInteger(iterations) || iterations <= 0) {
+      return false;
+    }
+
+    const keyMaterial = await crypto.subtle.importKey(
+      "raw",
+      new TextEncoder().encode(password),
+      "PBKDF2",
+      false,
+      ["deriveBits"]
+    );
+
+    const derivedBits = await crypto.subtle.deriveBits(
+      {
+        name: "PBKDF2",
+        salt,
+        iterations,
+        hash: PBKDF2_HASH
+      },
+      keyMaterial,
+      expectedHash.length * 8
+    );
+
+    const actualHash = new Uint8Array(derivedBits);
+
+    if (actualHash.length !== expectedHash.length) {
+      return false;
+    }
+
+    let difference = 0;
+
+    for (let i = 0; i < actualHash.length; i++) {
+      difference |= actualHash[i] ^ expectedHash[i];
+    }
+
+    return difference === 0;
+  } catch {
     return false;
   }
+}
 
-  const salt = base64ToBytes(salt64);
-  const hash = await hashPassword(password, salt);
+function sessionCookie(token) {
+  return `session=${encodeURIComponent(token)}; Max-Age=${SESSION_DAYS * 24 * 60 * 60}; Path=/; HttpOnly; Secure; SameSite=Lax`;
+}
 
-  return hash === savedHash;
+function clearSessionCookie() {
+  return "session=; Max-Age=0; Path=/; HttpOnly; Secure; SameSite=Lax";
 }
 
 async function getUser(request, env) {
-  const token = getCookie(request, "kurobox_session");
+  const token = getCookie(request, "session");
 
-  if (!token || !env.DB) {
+  if (!token) {
     return null;
   }
 
@@ -104,669 +189,751 @@ async function getUser(request, env) {
   return result || null;
 }
 
+async function readJson(request) {
+  try {
+    return await request.json();
+  } catch {
+    return null;
+  }
+}
+
+function validEmail(email) {
+  return typeof email === "string"
+    && email.length >= 3
+    && email.length <= 254
+    && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+function validPassword(password) {
+  return typeof password === "string"
+    && password.length >= 8
+    && password.length <= 200;
+}
+
+function chooseWeightedItem(items) {
+  if (!Array.isArray(items) || items.length === 0) {
+    return null;
+  }
+
+  const normalized = items
+    .map(item => ({
+      ...item,
+      probability: Number(item.probability)
+    }))
+    .filter(item =>
+      Number.isFinite(item.probability) &&
+      item.probability > 0 &&
+      Number(item.stock) > 0
+    );
+
+  if (normalized.length === 0) {
+    return null;
+  }
+
+  const total = normalized.reduce(
+    (sum, item) => sum + item.probability,
+    0
+  );
+
+  if (total <= 0) {
+    return null;
+  }
+
+  const random = Math.random() * total;
+
+  let cursor = 0;
+
+  for (const item of normalized) {
+    cursor += item.probability;
+
+    if (random < cursor) {
+      return item;
+    }
+  }
+
+  return normalized[normalized.length - 1];
+}
+
+function sanitizeItem(item) {
+  return {
+    id: item.id,
+    box_id: item.box_id,
+    name: item.name,
+    image_url: item.image_url ?? null,
+    probability: Number(item.probability),
+    stock: Number(item.stock)
+  };
+}
+
+async function handleHealth(env) {
+  let database = false;
+
+  try {
+    await env.DB
+      .prepare("SELECT 1 AS ok")
+      .first();
+
+    database = true;
+  } catch {
+    database = false;
+  }
+
+  return json({
+    ok: true,
+    app: "KuroBox",
+    version: "v10",
+    database
+  });
+}
+
+async function handleRegister(request, env) {
+  const body = await readJson(request);
+
+  if (!body) {
+    return errorResponse("Body JSON tidak valid.");
+  }
+
+  const email = String(body.email || "").trim().toLowerCase();
+  const password = body.password;
+
+  if (!validEmail(email)) {
+    return errorResponse("Email tidak valid.");
+  }
+
+  if (!validPassword(password)) {
+    return errorResponse(
+      "Password minimal 8 karakter."
+    );
+  }
+
+  try {
+    const existing = await env.DB
+      .prepare(`
+        SELECT id
+        FROM users
+        WHERE email = ?
+        LIMIT 1
+      `)
+      .bind(email)
+      .first();
+
+    if (existing) {
+      return errorResponse(
+        "Email sudah terdaftar.",
+        409
+      );
+    }
+
+    const passwordHash = await hashPassword(password);
+
+    const result = await env.DB
+      .prepare(`
+        INSERT INTO users (
+          email,
+          password_hash,
+          coins
+        )
+        VALUES (?, ?, 0)
+      `)
+      .bind(
+        email,
+        passwordHash
+      )
+      .run();
+
+    return json({
+      ok: true,
+      message: "Akun berhasil dibuat",
+      user_id: result.meta.last_row_id
+    }, 201);
+
+  } catch (error) {
+    return errorResponse(
+      error?.message || "Gagal membuat akun.",
+      500
+    );
+  }
+}
+
+async function handleLogin(request, env) {
+  const body = await readJson(request);
+
+  if (!body) {
+    return errorResponse("Body JSON tidak valid.");
+  }
+
+  const email = String(body.email || "").trim().toLowerCase();
+  const password = body.password;
+
+  if (!validEmail(email) || typeof password !== "string") {
+    return errorResponse(
+      "Email atau password tidak valid.",
+      401
+    );
+  }
+
+  try {
+    const user = await env.DB
+      .prepare(`
+        SELECT
+          id,
+          email,
+          password_hash,
+          coins
+        FROM users
+        WHERE email = ?
+        LIMIT 1
+      `)
+      .bind(email)
+      .first();
+
+    if (!user) {
+      return errorResponse(
+        "Email atau password salah.",
+        401
+      );
+    }
+
+    const valid = await verifyPassword(
+      password,
+      user.password_hash
+    );
+
+    if (!valid) {
+      return errorResponse(
+        "Email atau password salah.",
+        401
+      );
+    }
+
+    const token = createToken();
+
+    const expiresAt = new Date(
+      Date.now() + SESSION_DAYS * 24 * 60 * 60 * 1000
+    ).toISOString();
+
+    await env.DB
+      .prepare(`
+        INSERT INTO sessions (
+          user_id,
+          token,
+          expires_at
+        )
+        VALUES (?, ?, ?)
+      `)
+      .bind(
+        user.id,
+        token,
+        expiresAt
+      )
+      .run();
+
+    return json({
+      ok: true,
+      user: {
+        id: user.id,
+        email: user.email,
+        coins: Number(user.coins)
+      }
+    }, 200, {
+      "Set-Cookie": sessionCookie(token)
+    });
+
+  } catch (error) {
+    return errorResponse(
+      error?.message || "Login gagal.",
+      500
+    );
+  }
+}
+
+async function handleLogout(request, env) {
+  const token = getCookie(request, "session");
+
+  if (token) {
+    try {
+      await env.DB
+        .prepare(`
+          DELETE FROM sessions
+          WHERE token = ?
+        `)
+        .bind(token)
+        .run();
+    } catch {
+      // Tetap hapus cookie walaupun session DB gagal dihapus.
+    }
+  }
+
+  return json({
+    ok: true,
+    message: "Logout berhasil."
+  }, 200, {
+    "Set-Cookie": clearSessionCookie()
+  });
+}
+
+async function handleMe(request, env) {
+  const user = await getUser(request, env);
+
+  if (!user) {
+    return errorResponse(
+      "Belum login.",
+      401
+    );
+  }
+
+  return json({
+    ok: true,
+    user: {
+      id: user.id,
+      email: user.email,
+      coins: Number(user.coins)
+    }
+  });
+}
+
+async function handleBoxes(env) {
+  try {
+    const result = await env.DB
+      .prepare(`
+        SELECT
+          id,
+          name,
+          description,
+          price_coins,
+          active,
+          created_at
+        FROM gacha_boxes
+        WHERE active = 1
+        ORDER BY id ASC
+      `)
+      .all();
+
+    return json({
+      ok: true,
+      boxes: result.results || []
+    });
+
+  } catch (error) {
+    return errorResponse(
+      error?.message || "Gagal mengambil boxes.",
+      500
+    );
+  }
+}
+
+async function handleBoxItems(request, env) {
+  const url = new URL(request.url);
+  const boxId = Number(url.searchParams.get("box_id"));
+
+  if (!Number.isInteger(boxId) || boxId <= 0) {
+    return errorResponse(
+      "box_id tidak valid."
+    );
+  }
+
+  try {
+    const result = await env.DB
+      .prepare(`
+        SELECT
+          id,
+          box_id,
+          name,
+          image_url,
+          probability,
+          stock
+        FROM gacha_items
+        WHERE box_id = ?
+        ORDER BY id ASC
+      `)
+      .bind(boxId)
+      .all();
+
+    return json({
+      ok: true,
+      items: (result.results || []).map(sanitizeItem)
+    });
+
+  } catch (error) {
+    return errorResponse(
+      error?.message || "Gagal mengambil items.",
+      500
+    );
+  }
+}
+
+async function handleGacha(request, env) {
+  const user = await getUser(request, env);
+
+  if (!user) {
+    return errorResponse(
+      "Silakan login terlebih dahulu.",
+      401
+    );
+  }
+
+  const body = await readJson(request);
+
+  if (!body) {
+    return errorResponse(
+      "Body JSON tidak valid."
+    );
+  }
+
+  const boxId = Number(body.box_id);
+
+  if (!Number.isInteger(boxId) || boxId <= 0) {
+    return errorResponse(
+      "box_id tidak valid."
+    );
+  }
+
+  try {
+    const box = await env.DB
+      .prepare(`
+        SELECT
+          id,
+          name,
+          description,
+          price_coins,
+          active
+        FROM gacha_boxes
+        WHERE id = ?
+          AND active = 1
+        LIMIT 1
+      `)
+      .bind(boxId)
+      .first();
+
+    if (!box) {
+      return errorResponse(
+        "Box tidak ditemukan atau tidak aktif.",
+        404
+      );
+    }
+
+    const price = Number(box.price_coins);
+
+    if (!Number.isFinite(price) || price < 0) {
+      return errorResponse(
+        "Harga box tidak valid.",
+        500
+      );
+    }
+
+    const currentCoins = Number(user.coins);
+
+    if (!Number.isFinite(currentCoins)) {
+      return errorResponse(
+        "Saldo user tidak valid.",
+        500
+      );
+    }
+
+    if (currentCoins < price) {
+      return errorResponse(
+        "Coins tidak cukup.",
+        400
+      );
+    }
+
+    const itemsResult = await env.DB
+      .prepare(`
+        SELECT
+          id,
+          box_id,
+          name,
+          image_url,
+          probability,
+          stock
+        FROM gacha_items
+        WHERE box_id = ?
+          AND stock > 0
+        ORDER BY id ASC
+      `)
+      .bind(boxId)
+      .all();
+
+    const items = (itemsResult.results || [])
+      .map(sanitizeItem);
+
+    const selected = chooseWeightedItem(items);
+
+    if (!selected) {
+      return errorResponse(
+        "Tidak ada item yang tersedia.",
+        409
+      );
+    }
+
+    const expectedCoins = currentCoins - price;
+    const expectedStock = Number(selected.stock) - 1;
+
+    /*
+     * Semua perubahan penting dimasukkan ke D1 batch.
+     *
+     * Jika user tidak punya saldo yang cukup atau stock
+     * sudah berubah karena request lain, inventory INSERT
+     * sengaja gagal melalui nilai NULL pada kolom NOT NULL.
+     *
+     * Karena seluruh batch bersifat atomic, perubahan
+     * sebelumnya akan dibatalkan.
+     */
+
+    const statements = [
+      env.DB
+        .prepare(`
+          UPDATE users
+          SET coins = coins - ?
+          WHERE id = ?
+            AND coins >= ?
+        `)
+        .bind(
+          price,
+          user.id,
+          price
+        ),
+
+      env.DB
+        .prepare(`
+          UPDATE gacha_items
+          SET stock = stock - 1
+          WHERE id = ?
+            AND box_id = ?
+            AND stock > 0
+        `)
+        .bind(
+          selected.id,
+          boxId
+        ),
+
+      env.DB
+        .prepare(`
+          INSERT INTO inventory (
+            user_id,
+            item_id,
+            status
+          )
+          SELECT
+            CASE
+              WHEN EXISTS (
+                SELECT 1
+                FROM users
+                WHERE id = ?
+                  AND coins = ?
+              )
+              AND EXISTS (
+                SELECT 1
+                FROM gacha_items
+                WHERE id = ?
+                  AND box_id = ?
+                  AND stock = ?
+              )
+              THEN ?
+              ELSE NULL
+            END,
+            ?,
+            'won'
+        `)
+        .bind(
+          user.id,
+          expectedCoins,
+          selected.id,
+          boxId,
+          expectedStock,
+          user.id,
+          selected.id
+        ),
+
+      env.DB
+        .prepare(`
+          INSERT INTO coin_ledger (
+            user_id,
+            amount,
+            type,
+            description
+          )
+          VALUES (?, ?, ?, ?)
+        `)
+        .bind(
+          user.id,
+          -price,
+          "gacha",
+          `box:${boxId}:item:${selected.id}`
+        )
+    ];
+
+    await env.DB.batch(statements);
+
+    const newCoins = expectedCoins;
+
+    return json({
+      ok: true,
+      message: "Gacha berhasil!",
+      box: {
+        id: box.id,
+        name: box.name,
+        description: box.description ?? null,
+        price_coins: price,
+        active: Number(box.active)
+      },
+      reward: {
+        id: selected.id,
+        box_id: selected.box_id,
+        name: selected.name,
+        image_url: selected.image_url ?? null,
+        probability: Number(selected.probability)
+      },
+      user: {
+        id: user.id,
+        email: user.email,
+        coins: newCoins
+      }
+    });
+
+  } catch (error) {
+    const message = error?.message || "Gacha gagal.";
+
+    /*
+     * Constraint error di sini biasanya berarti kondisi
+     * berubah bersamaan dengan request lain. Karena batch
+     * atomic, perubahan parsial tidak dibiarkan tersimpan.
+     */
+    if (
+      message.includes("NOT NULL") ||
+      message.includes("constraint") ||
+      message.includes("CONSTRAINT")
+    ) {
+      return errorResponse(
+        "Gacha gagal diproses. Saldo atau stock baru saja berubah. Silakan coba lagi.",
+        409
+      );
+    }
+
+    return errorResponse(
+      message,
+      500
+    );
+  }
+}
+
+async function handleInventory(request, env) {
+  const user = await getUser(request, env);
+
+  if (!user) {
+    return errorResponse(
+      "Silakan login terlebih dahulu.",
+      401
+    );
+  }
+
+  try {
+    const result = await env.DB
+      .prepare(`
+        SELECT
+          i.id,
+          i.status,
+          i.created_at,
+          g.id AS item_id,
+          g.box_id,
+          g.name,
+          g.image_url,
+          g.probability
+        FROM inventory i
+        JOIN gacha_items g
+          ON g.id = i.item_id
+        WHERE i.user_id = ?
+        ORDER BY i.id DESC
+      `)
+      .bind(user.id)
+      .all();
+
+    return json({
+      ok: true,
+      inventory: result.results || []
+    });
+
+  } catch (error) {
+    return errorResponse(
+      error?.message || "Gagal mengambil inventory.",
+      500
+    );
+  }
+}
+
+async function handleRequest(request, env) {
+  const url = new URL(request.url);
+  const path = url.pathname;
+
+  if (request.method === "GET" && path === "/api/health") {
+    return handleHealth(env);
+  }
+
+  if (request.method === "POST" && path === "/api/register") {
+    return handleRegister(request, env);
+  }
+
+  if (request.method === "POST" && path === "/api/login") {
+    return handleLogin(request, env);
+  }
+
+  if (request.method === "POST" && path === "/api/logout") {
+    return handleLogout(request, env);
+  }
+
+  if (request.method === "GET" && path === "/api/me") {
+    return handleMe(request, env);
+  }
+
+  if (request.method === "GET" && path === "/api/boxes") {
+    return handleBoxes(env);
+  }
+
+  if (request.method === "GET" && path === "/api/box-items") {
+    return handleBoxItems(request, env);
+  }
+
+  if (request.method === "POST" && path === "/api/gacha") {
+    return handleGacha(request, env);
+  }
+
+  if (request.method === "GET" && path === "/api/inventory") {
+    return handleInventory(request, env);
+  }
+
+  return null;
+}
+
 export default {
   async fetch(request, env) {
-    const url = new URL(request.url);
+    try {
+      const apiResponse = await handleRequest(request, env);
 
-    // =========================
-    // HEALTH
-    // =========================
-    if (url.pathname === "/api/health") {
-      return json({
-        ok: true,
-        app: "KuroBox",
-        version: "v9",
-        database: Boolean(env.DB)
-      });
-    }
-
-    // =========================
-    // CEK DATABASE
-    // =========================
-    if (!env.DB) {
-      if (url.pathname.startsWith("/api/")) {
-        return json(
-          {
-            ok: false,
-            error: "D1 database belum terhubung"
-          },
-          500
-        );
-      }
-    }
-
-    // =========================
-    // REGISTER
-    // =========================
-    if (url.pathname === "/api/register" && request.method === "POST") {
-      try {
-        const body = await request.json();
-
-        const email = String(body.email || "")
-          .trim()
-          .toLowerCase();
-
-        const password = String(body.password || "");
-
-        if (!email || !password) {
-          return json(
-            {
-              ok: false,
-              error: "Email dan password wajib diisi"
-            },
-            400
-          );
-        }
-
-        if (password.length < 6) {
-          return json(
-            {
-              ok: false,
-              error: "Password minimal 6 karakter"
-            },
-            400
-          );
-        }
-
-        const existing = await env.DB
-          .prepare(
-            "SELECT id FROM users WHERE email = ?"
-          )
-          .bind(email)
-          .first();
-
-        if (existing) {
-          return json(
-            {
-              ok: false,
-              error: "Email sudah terdaftar"
-            },
-            409
-          );
-        }
-
-        const passwordHash =
-          await createPasswordHash(password);
-
-        const result = await env.DB
-          .prepare(`
-            INSERT INTO users (
-              email,
-              password_hash,
-              coins
-            )
-            VALUES (?, ?, 0)
-          `)
-          .bind(email, passwordHash)
-          .run();
-
-        return json({
-          ok: true,
-          message: "Akun berhasil dibuat",
-          user_id: result.meta.last_row_id
-        });
-      } catch (error) {
-        return json(
-          {
-            ok: false,
-            error: error.message
-          },
-          500
-        );
-      }
-    }
-
-    // =========================
-    // LOGIN
-    // =========================
-    if (url.pathname === "/api/login" && request.method === "POST") {
-      try {
-        const body = await request.json();
-
-        const email = String(body.email || "")
-          .trim()
-          .toLowerCase();
-
-        const password = String(body.password || "");
-
-        const user = await env.DB
-          .prepare(`
-            SELECT
-              id,
-              email,
-              password_hash,
-              coins
-            FROM users
-            WHERE email = ?
-            LIMIT 1
-          `)
-          .bind(email)
-          .first();
-
-        if (
-          !user ||
-          !(await verifyPassword(
-            password,
-            user.password_hash
-          ))
-        ) {
-          return json(
-            {
-              ok: false,
-              error: "Email atau password salah"
-            },
-            401
-          );
-        }
-
-        const token = makeToken();
-
-        await env.DB
-          .prepare(`
-            INSERT INTO sessions (
-              user_id,
-              token,
-              expires_at
-            )
-            VALUES (
-              ?,
-              ?,
-              datetime('now', '+7 days')
-            )
-          `)
-          .bind(user.id, token)
-          .run();
-
-        return json(
-          {
-            ok: true,
-            user: {
-              id: user.id,
-              email: user.email,
-              coins: user.coins
-            }
-          },
-          200,
-          {
-            "Set-Cookie":
-              `kurobox_session=${encodeURIComponent(token)}; ` +
-              `HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=604800`
-          }
-        );
-      } catch (error) {
-        return json(
-          {
-            ok: false,
-            error: error.message
-          },
-          500
-        );
-      }
-    }
-
-    // =========================
-    // LOGOUT
-    // =========================
-    if (url.pathname === "/api/logout" && request.method === "POST") {
-      const token = getCookie(
-        request,
-        "kurobox_session"
-      );
-
-      if (token) {
-        await env.DB
-          .prepare(
-            "DELETE FROM sessions WHERE token = ?"
-          )
-          .bind(token)
-          .run();
+      if (apiResponse) {
+        return apiResponse;
       }
 
-      return json(
+      if (env.ASSETS) {
+        return env.ASSETS.fetch(request);
+      }
+
+      return new Response(
+        "KuroBox is running.",
         {
-          ok: true
-        },
-        200,
-        {
-          "Set-Cookie":
-            "kurobox_session=; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=0"
-        }
-      );
-    }
-
-    // =========================
-    // ME
-    // =========================
-    if (url.pathname === "/api/me") {
-      const user = await getUser(request, env);
-
-      if (!user) {
-        return json(
-          {
-            ok: false,
-            error: "Belum login"
-          },
-          401
-        );
-      }
-
-      return json({
-        ok: true,
-        user
-      });
-    }
-
-    // =========================
-    // BOXES
-    // =========================
-    if (url.pathname === "/api/boxes") {
-      try {
-        const result = await env.DB
-          .prepare(`
-            SELECT
-              id,
-              name,
-              description,
-              price_coins,
-              active
-            FROM gacha_boxes
-            WHERE active = 1
-            ORDER BY id ASC
-          `)
-          .all();
-
-        return json({
-          ok: true,
-          boxes: result.results || []
-        });
-      } catch (error) {
-        return json(
-          {
-            ok: false,
-            error: error.message
-          },
-          500
-        );
-      }
-    }
-
-    // =========================
-    // BOX ITEMS
-    // =========================
-    if (url.pathname === "/api/box-items") {
-      const boxId = url.searchParams.get("box_id");
-
-      if (!boxId) {
-        return json(
-          {
-            ok: false,
-            error: "box_id wajib diisi"
-          },
-          400
-        );
-      }
-
-      try {
-        const result = await env.DB
-          .prepare(`
-            SELECT
-              id,
-              box_id,
-              name,
-              image_url,
-              probability,
-              stock
-            FROM gacha_items
-            WHERE box_id = ?
-            ORDER BY id ASC
-          `)
-          .bind(boxId)
-          .all();
-
-        return json({
-          ok: true,
-          items: result.results || []
-        });
-      } catch (error) {
-        return json(
-          {
-            ok: false,
-            error: error.message
-          },
-          500
-        );
-      }
-    }
-
-    // =========================
-    // GACHA
-    // =========================
-    if (
-      url.pathname === "/api/gacha" &&
-      request.method === "POST"
-    ) {
-      try {
-        const user = await getUser(request, env);
-
-        if (!user) {
-          return json(
-            {
-              ok: false,
-              error: "Silakan login terlebih dahulu"
-            },
-            401
-          );
-        }
-
-        const body = await request.json();
-        const boxId = Number(body.box_id);
-
-        if (!Number.isInteger(boxId)) {
-          return json(
-            {
-              ok: false,
-              error: "box_id tidak valid"
-            },
-            400
-          );
-        }
-
-        // Ambil box
-        const box = await env.DB
-          .prepare(`
-            SELECT
-              id,
-              name,
-              description,
-              price_coins
-            FROM gacha_boxes
-            WHERE id = ?
-              AND active = 1
-            LIMIT 1
-          `)
-          .bind(boxId)
-          .first();
-
-        if (!box) {
-          return json(
-            {
-              ok: false,
-              error: "Box tidak ditemukan"
-            },
-            404
-          );
-        }
-
-        // Ambil hadiah yang masih tersedia
-        const itemsResult = await env.DB
-          .prepare(`
-            SELECT
-              id,
-              name,
-              image_url,
-              probability,
-              stock
-            FROM gacha_items
-            WHERE box_id = ?
-              AND stock > 0
-              AND probability > 0
-          `)
-          .bind(boxId)
-          .all();
-
-        const items = itemsResult.results || [];
-
-        if (items.length === 0) {
-          return json(
-            {
-              ok: false,
-              error:
-                "Tidak ada hadiah yang tersedia di box ini"
-            },
-            400
-          );
-        }
-
-        // =========================
-        // WEIGHTED RANDOM
-        // =========================
-        const totalProbability = items.reduce(
-          (sum, item) =>
-            sum + Number(item.probability),
-          0
-        );
-
-        if (totalProbability <= 0) {
-          return json(
-            {
-              ok: false,
-              error: "Probability hadiah tidak valid"
-            },
-            500
-          );
-        }
-
-        let random =
-          Math.random() * totalProbability;
-
-        let selected =
-          items[items.length - 1];
-
-        for (const item of items) {
-          random -= Number(item.probability);
-
-          if (random <= 0) {
-            selected = item;
-            break;
+          status: 200,
+          headers: {
+            "Content-Type": "text/plain; charset=utf-8"
           }
         }
+      );
 
-        // =========================
-        // KURANGI COIN
-        // =========================
-        const coinUpdate = await env.DB
-          .prepare(`
-            UPDATE users
-            SET coins = coins - ?
-            WHERE id = ?
-              AND coins >= ?
-          `)
-          .bind(
-            box.price_coins,
-            user.id,
-            box.price_coins
-          )
-          .run();
+    } catch (error) {
+      console.error("KuroBox error:", error);
 
-        if (!coinUpdate.meta.changes) {
-          return json(
-            {
-              ok: false,
-              error: "Coin tidak cukup",
-              required: box.price_coins
-            },
-            400
-          );
-        }
-
-        // =========================
-        // KURANGI STOCK
-        // =========================
-        const stockUpdate = await env.DB
-          .prepare(`
-            UPDATE gacha_items
-            SET stock = stock - 1
-            WHERE id = ?
-              AND stock > 0
-          `)
-          .bind(selected.id)
-          .run();
-
-        if (!stockUpdate.meta.changes) {
-          // Refund coin
-          await env.DB
-            .prepare(`
-              UPDATE users
-              SET coins = coins + ?
-              WHERE id = ?
-            `)
-            .bind(
-              box.price_coins,
-              user.id
-            )
-            .run();
-
-          return json(
-            {
-              ok: false,
-              error:
-                "Hadiah tersebut baru saja habis. Silakan coba lagi."
-            },
-            409
-          );
-        }
-
-        // =========================
-        // SIMPAN INVENTORY
-        // =========================
-        await env.DB
-          .prepare(`
-            INSERT INTO inventory (
-              user_id,
-              item_id,
-              status
-            )
-            VALUES (?, ?, 'won')
-          `)
-          .bind(
-            user.id,
-            selected.id
-          )
-          .run();
-
-        // =========================
-        // COIN LEDGER
-        // =========================
-        await env.DB
-          .prepare(`
-        INSERT INTO coin_ledger (user_id, amount, type, description)
-VALUES (?, ?, ?, ?)
-          `)
-         .bind(
-  user.id,
-  -box.price_coins,
-  "gacha",
-  `box:${box.id}:item:${selected.id}`
-)
-          .run();
-
-        // =========================
-        // USER TERBARU
-        // =========================
-        const newUser = await env.DB
-          .prepare(`
-            SELECT
-              id,
-              email,
-              coins
-            FROM users
-            WHERE id = ?
-          `)
-          .bind(user.id)
-          .first();
-
-        return json({
-          ok: true,
-          message: "Gacha berhasil!",
-          box: {
-            id: box.id,
-            name: box.name,
-            description: box.description,
-            price_coins: box.price_coins
-          },
-          reward: {
-            id: selected.id,
-            name: selected.name,
-            image_url: selected.image_url,
-            probability: selected.probability
-          },
-          user: newUser
-        });
-      } catch (error) {
-        return json(
-          {
-            ok: false,
-            error: error.message
-          },
-          500
-        );
-      }
+      return json({
+        ok: false,
+        error: error?.message || "Internal Server Error"
+      }, 500);
     }
-
-    // =========================
-    // INVENTORY
-    // =========================
-    if (url.pathname === "/api/inventory") {
-      try {
-        const user = await getUser(request, env);
-
-        if (!user) {
-          return json(
-            {
-              ok: false,
-              error: "Silakan login terlebih dahulu"
-            },
-            401
-          );
-        }
-
-        const result = await env.DB
-          .prepare(`
-            SELECT
-              i.id,
-              i.status,
-              i.created_at,
-              g.name,
-              g.image_url,
-              g.probability
-            FROM inventory i
-            JOIN gacha_items g
-              ON g.id = i.item_id
-            WHERE i.user_id = ?
-            ORDER BY i.id DESC
-          `)
-          .bind(user.id)
-          .all();
-
-        return json({
-          ok: true,
-          inventory: result.results || []
-        });
-      } catch (error) {
-        return json(
-          {
-            ok: false,
-            error: error.message
-          },
-          500
-        );
-      }
-    }
-
-    // =========================
-    // ASSETS / WEBSITE
-    // =========================
-    if (env.ASSETS) {
-      return env.ASSETS.fetch(request);
-    }
-
-    return new Response(
-      "KuroBox is running.",
-      {
-        headers: {
-          "content-type": "text/plain"
-        }
-      }
-    );
   }
 };
