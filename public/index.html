@@ -609,6 +609,88 @@ nav{
     opacity:1;
   }
 }
+  /* RARITY OPENING EFFECT */
+
+.blind-overlay.rarity-common{
+  background:
+    radial-gradient(
+      circle at center,
+      rgba(255,255,255,.08),
+      rgba(3,5,15,.97) 65%
+    );
+}
+
+.blind-overlay.rarity-rare{
+  background:
+    radial-gradient(
+      circle at center,
+      rgba(59,130,246,.35),
+      rgba(3,5,15,.97) 65%
+    );
+  animation:rareScreen .8s ease;
+}
+
+.blind-overlay.rarity-epic{
+  background:
+    radial-gradient(
+      circle at center,
+      rgba(168,85,247,.45),
+      rgba(3,5,15,.97) 65%
+    );
+  animation:epicScreen .7s ease;
+}
+
+.blind-overlay.rarity-legendary{
+  background:
+    radial-gradient(
+      circle at center,
+      rgba(251,191,36,.55),
+      rgba(3,5,15,.95) 65%
+    );
+  animation:legendaryScreen .6s ease;
+}
+
+@keyframes rareScreen{
+  0%{
+    filter:brightness(1);
+  }
+  50%{
+    filter:brightness(1.5);
+  }
+  100%{
+    filter:brightness(1);
+  }
+}
+
+@keyframes epicScreen{
+  0%{
+    filter:brightness(1);
+  }
+  40%{
+    filter:brightness(1.8);
+  }
+  70%{
+    filter:brightness(1.2);
+  }
+  100%{
+    filter:brightness(1);
+  }
+}
+
+@keyframes legendaryScreen{
+  0%{
+    filter:brightness(1);
+  }
+  30%{
+    filter:brightness(2.5);
+  }
+  60%{
+    filter:brightness(1.4);
+  }
+  100%{
+    filter:brightness(1);
+  }
+}
 </style>
 </head>
 
@@ -1226,6 +1308,20 @@ openingText.textContent = "🎁 Membuka Blind Box...";
     }
 
  currentUser=result.data.user;
+    const rarity = result.data.reward?.rarity || "Common";
+
+const overlay = document.getElementById("blindBoxOverlay");
+
+overlay.classList.remove(
+  "rarity-common",
+  "rarity-rare",
+  "rarity-epic",
+  "rarity-legendary"
+);
+
+overlay.classList.add(
+  "rarity-" + rarity.toLowerCase()
+);
 
 updateCoins();
 
