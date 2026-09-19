@@ -255,7 +255,74 @@ input:focus{
     #14111a;
   animation:pop .45s ease;
 }
+/* RARITY EFFECTS */
 
+.rarity-common .reward-card{
+  border-color:#777;
+  box-shadow:0 0 20px rgba(255,255,255,.08);
+}
+
+.rarity-rare .reward-card{
+  border-color:#3b82f6;
+  box-shadow:
+    0 0 20px rgba(59,130,246,.35),
+    0 0 50px rgba(59,130,246,.15);
+  animation:
+    pop .45s ease,
+    rareGlow 1.5s infinite alternate;
+}
+
+.rarity-epic .reward-card{
+  border-color:#a855f7;
+  box-shadow:
+    0 0 25px rgba(168,85,247,.5),
+    0 0 70px rgba(168,85,247,.25);
+  animation:
+    pop .45s ease,
+    epicGlow 1s infinite alternate;
+}
+
+.rarity-legendary .reward-card{
+  border-color:#fbbf24;
+  box-shadow:
+    0 0 30px rgba(251,191,36,.7),
+    0 0 80px rgba(251,191,36,.35),
+    0 0 120px rgba(255,200,50,.15);
+  animation:
+    pop .45s ease,
+    legendaryGlow .8s infinite alternate;
+}
+
+@keyframes rareGlow{
+  from{
+    box-shadow:0 0 15px rgba(59,130,246,.25);
+  }
+  to{
+    box-shadow:0 0 40px rgba(59,130,246,.7);
+  }
+}
+
+@keyframes epicGlow{
+  from{
+    box-shadow:0 0 20px rgba(168,85,247,.3);
+    transform:scale(1);
+  }
+  to{
+    box-shadow:0 0 55px rgba(168,85,247,.8);
+    transform:scale(1.02);
+  }
+}
+
+@keyframes legendaryGlow{
+  from{
+    box-shadow:0 0 25px rgba(251,191,36,.4);
+    transform:scale(1);
+  }
+  to{
+    box-shadow:0 0 75px rgba(251,191,36,.9);
+    transform:scale(1.04);
+  }
+}
 @keyframes pop{
   from{transform:scale(.92);opacity:0}
   to{transform:scale(1);opacity:1}
@@ -1233,13 +1300,37 @@ function playGachaAnimation(reward){
 
 function showReward(reward){
 
-  document.getElementById("rewardName").textContent =
-    reward.name || "Mystery Item";
+  const section = document.getElementById("rewardSection");
+  const rewardName = document.getElementById("rewardName");
+  const rewardProbability = document.getElementById("rewardProbability");
 
-  document.getElementById("rewardProbability").textContent =
-    "Probability: "+Number(reward.probability || 0)+"%";
+  const rarity = reward.rarity || "Common";
 
-  const section=document.getElementById("rewardSection");
+  const rarityIcon = {
+    Common: "✨",
+    Rare: "💎",
+    Epic: "🔮",
+    Legendary: "👑"
+  };
+
+  rewardName.textContent =
+    (rarityIcon[rarity] || "✨") + " " +
+    (reward.name || "Mystery Item");
+
+  rewardProbability.textContent =
+    rarity + " • Probability: " +
+    Number(reward.probability || 0) + "%";
+
+  section.classList.remove(
+    "rarity-common",
+    "rarity-rare",
+    "rarity-epic",
+    "rarity-legendary"
+  );
+
+  section.classList.add(
+    "rarity-" + rarity.toLowerCase()
+  );
 
   section.classList.remove("hidden");
 
@@ -1248,8 +1339,6 @@ function showReward(reward){
     block:"center"
   });
 }
-
-
 /* INVENTORY */
 
 async function loadInventory(){
