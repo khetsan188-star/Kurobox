@@ -411,7 +411,7 @@ if (!validEmail(email) || typeof password !== "string") {
   );
 }
 
-try {  try {
+  try {
     const user = await env.DB
       .prepare(`
         SELECT
