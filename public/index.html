@@ -546,7 +546,21 @@ nav{
 </head>
 
 <body>
-
+<button onclick="testSound()" style="
+  position:fixed;
+  top:20px;
+  right:20px;
+  z-index:99999;
+  padding:12px 18px;
+  border:0;
+  border-radius:10px;
+  background:#8b5cf6;
+  color:white;
+  font-weight:bold;
+  cursor:pointer;
+">
+🔊 TEST SOUND
+</button>
 <main>
 
   <div class="topbar">
@@ -983,6 +997,30 @@ async function loadBoxes(){
 
 
 /* GACHA */
+  function testSound(){
+
+  const ctx = new (window.AudioContext || window.webkitAudioContext)();
+
+  ctx.resume().then(() => {
+
+    const oscillator = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    oscillator.type = "sine";
+    oscillator.frequency.value = 440;
+
+    gain.gain.value = 0.2;
+
+    oscillator.connect(gain);
+    gain.connect(ctx.destination);
+
+    oscillator.start();
+
+    oscillator.stop(ctx.currentTime + 1);
+
+  });
+
+}
 /* SOUND EFFECT */
 
 let audioCtx = null;
