@@ -4,42 +4,1068 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>KuroBox — Gacha</title>
+
 <style>
-*{box-sizing:border-box}body{margin:0;background:#0b0b10;color:#fff;font-family:system-ui,-apple-system,sans-serif}
-main{max-width:720px;margin:auto;padding:20px 16px 90px}.brand{font-size:28px;font-weight:800}.muted{color:#aaa}
-.hero{margin-top:20px;padding:24px;border:1px solid #292936;border-radius:22px;background:#14141d}
-button{border:0;border-radius:12px;padding:13px 16px;font-weight:700;cursor:pointer}
-.card{margin-top:14px;padding:18px;border:1px solid #292936;border-radius:18px;background:#12121a}
-.badge{display:inline-block;padding:5px 9px;border-radius:999px;background:#272735;color:#ddd;font-size:12px}
-nav{position:fixed;bottom:0;left:0;right:0;background:#111118;border-top:1px solid #292936;padding:14px;text-align:center}
+*{box-sizing:border-box}
+
+body{
+  margin:0;
+  background:#09090f;
+  color:#fff;
+  font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+}
+
+main{
+  max-width:720px;
+  margin:auto;
+  padding:20px 16px 100px;
+}
+
+.brand{
+  font-size:30px;
+  font-weight:900;
+  letter-spacing:-1px;
+}
+
+.brand span{
+  color:#ff4fa3;
+}
+
+.muted{
+  color:#999;
+}
+
+.hero{
+  margin-top:20px;
+  padding:24px;
+  border:1px solid #292936;
+  border-radius:24px;
+  background:
+    radial-gradient(circle at top right,#4b1740 0,#18121f 35%,#12121a 70%);
+}
+
+.hero h1{
+  font-size:34px;
+  line-height:1.1;
+  margin:14px 0;
+}
+
+.badge{
+  display:inline-block;
+  padding:6px 10px;
+  border-radius:999px;
+  background:#292735;
+  color:#ff72b8;
+  font-size:12px;
+  font-weight:800;
+}
+
+button{
+  border:0;
+  border-radius:13px;
+  padding:13px 17px;
+  font-weight:800;
+  cursor:pointer;
+  color:white;
+  background:#ff3f9f;
+}
+
+button:hover{
+  opacity:.9;
+}
+
+button:disabled{
+  opacity:.5;
+  cursor:not-allowed;
+}
+
+.topbar{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+}
+
+.coins{
+  background:#171720;
+  border:1px solid #30303c;
+  border-radius:14px;
+  padding:10px 14px;
+  font-weight:800;
+}
+
+.section{
+  margin-top:25px;
+}
+
+.section-title{
+  font-size:21px;
+  font-weight:900;
+  margin-bottom:12px;
+}
+
+.card{
+  margin-top:12px;
+  padding:18px;
+  border:1px solid #292936;
+  border-radius:18px;
+  background:#12121a;
+}
+
+.box-card{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:15px;
+}
+
+.box-info{
+  flex:1;
+}
+
+.box-name{
+  font-size:18px;
+  font-weight:900;
+}
+
+.price{
+  margin-top:8px;
+  color:#ff72b8;
+  font-weight:800;
+}
+
+.hidden{
+  display:none!important;
+}
+
+.auth{
+  margin-top:18px;
+  padding:20px;
+  border:1px solid #292936;
+  border-radius:20px;
+  background:#12121a;
+}
+
+input{
+  width:100%;
+  margin-top:9px;
+  margin-bottom:12px;
+  padding:13px;
+  border-radius:12px;
+  border:1px solid #33333f;
+  background:#0d0d14;
+  color:white;
+  outline:none;
+}
+
+input:focus{
+  border-color:#ff4fa3;
+}
+
+.auth-buttons{
+  display:flex;
+  gap:10px;
+}
+
+.auth-buttons button{
+  flex:1;
+}
+
+.secondary{
+  background:#292936;
+}
+
+.message{
+  margin-top:12px;
+  font-size:14px;
+}
+
+.reward{
+  text-align:center;
+  padding:25px 15px;
+  border-radius:20px;
+  background:
+    radial-gradient(circle,#54204c,#16131e 65%);
+  border:1px solid #67385b;
+}
+
+.reward-icon{
+  font-size:60px;
+  margin-bottom:10px;
+}
+
+.reward-name{
+  font-size:25px;
+  font-weight:900;
+  color:#ff72b8;
+}
+
+.inventory-item{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+}
+
+.status{
+  font-size:12px;
+  background:#24351f;
+  color:#9df080;
+  padding:5px 9px;
+  border-radius:999px;
+}
+
+nav{
+  position:fixed;
+  bottom:0;
+  left:0;
+  right:0;
+  background:#101018;
+  border-top:1px solid #292936;
+  padding:12px 10px;
+  text-align:center;
+  color:#aaa;
+  z-index:10;
+}
+
+.nav-inner{
+  max-width:720px;
+  margin:auto;
+  display:flex;
+  justify-content:space-around;
+  font-size:13px;
+}
+
+.nav-item{
+  cursor:pointer;
+}
+
+.nav-item.active{
+  color:#ff4fa3;
+  font-weight:800;
+}
+
+@media(max-width:500px){
+  .hero h1{
+    font-size:29px;
+  }
+
+  .box-card{
+    align-items:flex-start;
+  }
+
+  .box-card button{
+    padding:11px 12px;
+  }
+}
 </style>
 </head>
+
 <body>
+
 <main>
-  <div class="brand">🦊 KuroBox</div>
-  <div class="muted">Gacha • Collect • Discover</div>
-  <section class="hero">
-    <span class="badge">V6 BUSINESS</span>
-    <h1>Buka Box-nya.<br>Raih Kejutannya.</h1>
-    <p class="muted">Platform gacha collectible KuroBox.</p>
-    <button onclick="health()">Cek Server</button>
-    <p id="status" class="muted"></p>
+
+  <!-- HEADER -->
+  <div class="topbar">
+    <div>
+      <div class="brand">🦊 Kuro<span>Box</span></div>
+      <div class="muted">Gacha • Collect • Discover</div>
+    </div>
+
+    <div id="coinDisplay" class="coins hidden">
+      🪙 <span id="coins">0</span>
+    </div>
+  </div>
+
+
+  <!-- AUTH -->
+  <section id="authSection" class="auth">
+
+    <div class="section-title">🔐 Masuk ke KuroBox</div>
+
+    <input
+      id="email"
+      type="email"
+      placeholder="Email"
+      autocomplete="email"
+    >
+
+    <input
+      id="password"
+      type="password"
+      placeholder="Password"
+      autocomplete="current-password"
+    >
+
+    <div class="auth-buttons">
+      <button onclick="login()">Login</button>
+      <button class="secondary" onclick="register()">Daftar</button>
+    </div>
+
+    <div id="authMessage" class="message muted"></div>
+
   </section>
-  <div class="card"><b>🎁 Limited Figure Box</b><p class="muted">Common · Rare · Super Rare · Secret</p></div>
-  <div class="card"><b>🃏 TCG Box</b><p class="muted">Koleksi kartu dan hadiah fisik.</p></div>
-  <div class="card"><b>📦 Inventory</b><p class="muted">Hadiah yang dimenangkan akan tercatat di akun.</p></div>
+
+
+  <!-- USER -->
+  <section id="userSection" class="hidden">
+
+    <div class="hero">
+
+      <span class="badge">KUROBOX MEMBER</span>
+
+      <h1>
+        Buka Box-nya.<br>
+        Raih Kejutannya. 🎁
+      </h1>
+
+      <p class="muted">
+        Selamat datang di KuroBox.
+        Pilih box favoritmu dan coba keberuntunganmu.
+      </p>
+
+      <button onclick="logout()">Logout</button>
+
+    </div>
+
+
+    <!-- GACHA BOX -->
+    <section class="section">
+
+      <div class="section-title">
+        🎲 Pilihan Gacha
+      </div>
+
+      <div id="boxes">
+        <div class="card muted">
+          Memuat box...
+        </div>
+      </div>
+
+    </section>
+
+
+    <!-- REWARD -->
+    <section id="rewardSection" class="section hidden">
+
+      <div class="section-title">
+        🎉 Hasil Gacha
+      </div>
+
+      <div class="reward">
+
+        <div class="reward-icon">
+          🎁
+        </div>
+
+        <div class="muted">
+          Kamu mendapatkan
+        </div>
+
+        <div id="rewardName" class="reward-name">
+          -
+        </div>
+
+        <p id="rewardProbability" class="muted"></p>
+
+      </div>
+
+    </section>
+
+
+    <!-- INVENTORY -->
+    <section class="section">
+
+      <div class="section-title">
+        📦 Inventory Saya
+      </div>
+
+      <div id="inventory">
+        <div class="card muted">
+          Memuat inventory...
+        </div>
+      </div>
+
+    </section>
+
+  </section>
+
 </main>
-<nav>KuroBox · Beranda · Gacha · Inventori · Akun</nav>
+
+
+<!-- NAVIGATION -->
+<nav>
+  <div class="nav-inner">
+    <div class="nav-item active" onclick="scrollToTop()">
+      🏠 Beranda
+    </div>
+
+    <div class="nav-item" onclick="scrollToGacha()">
+      🎲 Gacha
+    </div>
+
+    <div class="nav-item" onclick="scrollToInventory()">
+      📦 Inventori
+    </div>
+
+    <div class="nav-item" onclick="scrollToTop()">
+      👤 Akun
+    </div>
+  </div>
+</nav>
+
+
 <script>
-async function health(){
-  const el=document.getElementById("status");
-  el.textContent="Memeriksa server…";
-  try{
-    const r=await fetch("/api/health");
-    const d=await r.json();
-    el.textContent=d.ok ? "Server aktif · Database: "+(d.database?"terhubung":"belum terhubung") : "Server bermasalah";
-  }catch(e){el.textContent="Tidak dapat terhubung ke server."}
+
+let currentUser = null;
+
+
+/* =========================
+   HELPER
+========================= */
+
+async function api(url, options = {}) {
+
+  const response = await fetch(url, {
+    credentials: "same-origin",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...(options.headers || {})
+    }
+  });
+
+  let data;
+
+  try {
+    data = await response.json();
+  } catch {
+    data = {
+      ok:false,
+      error:"Server mengembalikan response yang tidak valid."
+    };
+  }
+
+  return {
+    status:response.status,
+    data
+  };
 }
+
+
+/* =========================
+   LOGIN
+========================= */
+
+async function login(){
+
+  const email =
+    document.getElementById("email").value.trim();
+
+  const password =
+    document.getElementById("password").value;
+
+  const message =
+    document.getElementById("authMessage");
+
+  if(!email || !password){
+
+    message.textContent =
+      "Email dan password wajib diisi.";
+
+    return;
+  }
+
+  message.textContent = "Sedang login...";
+
+  try{
+
+    const result = await api("/api/login",{
+      method:"POST",
+      body:JSON.stringify({
+        email,
+        password
+      })
+    });
+
+    if(!result.data.ok){
+
+      message.textContent =
+        result.data.error || "Login gagal.";
+
+      return;
+    }
+
+    currentUser = result.data.user;
+
+    message.textContent = "Login berhasil!";
+
+    showUser();
+
+  }catch(error){
+
+    message.textContent =
+      "Tidak dapat terhubung ke server.";
+
+    console.error(error);
+  }
+}
+
+
+/* =========================
+   REGISTER
+========================= */
+
+async function register(){
+
+  const email =
+    document.getElementById("email").value.trim();
+
+  const password =
+    document.getElementById("password").value;
+
+  const message =
+    document.getElementById("authMessage");
+
+  if(!email || !password){
+
+    message.textContent =
+      "Email dan password wajib diisi.";
+
+    return;
+  }
+
+  message.textContent =
+    "Mendaftarkan akun...";
+
+  try{
+
+    const result = await api("/api/register",{
+      method:"POST",
+      body:JSON.stringify({
+        email,
+        password
+      })
+    });
+
+    if(!result.data.ok){
+
+      message.textContent =
+        result.data.error || "Registrasi gagal.";
+
+      return;
+    }
+
+    message.textContent =
+      "Akun berhasil dibuat. Silakan login.";
+
+  }catch(error){
+
+    message.textContent =
+      "Tidak dapat terhubung ke server.";
+
+    console.error(error);
+  }
+}
+
+
+/* =========================
+   CHECK SESSION
+========================= */
+
+async function checkSession(){
+
+  try{
+
+    const result =
+      await api("/api/me");
+
+    if(result.data.ok){
+
+      currentUser =
+        result.data.user;
+
+      showUser();
+
+    }else{
+
+      showAuth();
+    }
+
+  }catch(error){
+
+    showAuth();
+
+    console.error(error);
+  }
+}
+
+
+/* =========================
+   SHOW USER
+========================= */
+
+function showUser(){
+
+  document
+    .getElementById("authSection")
+    .classList.add("hidden");
+
+  document
+    .getElementById("userSection")
+    .classList.remove("hidden");
+
+  document
+    .getElementById("coinDisplay")
+    .classList.remove("hidden");
+
+  updateCoins();
+
+  loadBoxes();
+
+  loadInventory();
+}
+
+
+/* =========================
+   SHOW AUTH
+========================= */
+
+function showAuth(){
+
+  document
+    .getElementById("authSection")
+    .classList.remove("hidden");
+
+  document
+    .getElementById("userSection")
+    .classList.add("hidden");
+
+  document
+    .getElementById("coinDisplay")
+    .classList.add("hidden");
+}
+
+
+/* =========================
+   UPDATE COINS
+========================= */
+
+function updateCoins(){
+
+  if(!currentUser) return;
+
+  document
+    .getElementById("coins")
+    .textContent =
+      Number(currentUser.coins || 0).toLocaleString("id-ID");
+}
+
+
+/* =========================
+   LOAD BOXES
+========================= */
+
+async function loadBoxes(){
+
+  const container =
+    document.getElementById("boxes");
+
+  container.innerHTML =
+    `<div class="card muted">Memuat box...</div>`;
+
+  try{
+
+    const result =
+      await api("/api/boxes");
+
+    if(!result.data.ok){
+
+      container.innerHTML =
+        `<div class="card muted">
+          ${escapeHtml(result.data.error || "Gagal memuat box.")}
+        </div>`;
+
+      return;
+    }
+
+    const boxes =
+      result.data.boxes || [];
+
+    if(boxes.length === 0){
+
+      container.innerHTML =
+        `<div class="card muted">
+          Belum ada gacha box.
+        </div>`;
+
+      return;
+    }
+
+    container.innerHTML =
+      boxes.map(box => `
+
+        <div class="card box-card">
+
+          <div class="box-info">
+
+            <div class="box-name">
+              🎁 ${escapeHtml(box.name)}
+            </div>
+
+            <div class="muted">
+              ${escapeHtml(box.description || "Gacha collectible")}
+            </div>
+
+            <div class="price">
+              🪙 ${Number(box.price_coins).toLocaleString("id-ID")} coins
+            </div>
+
+          </div>
+
+          <button
+            onclick="playGacha(${Number(box.id)}, '${escapeAttr(box.name)}', ${Number(box.price_coins)})"
+          >
+            Buka
+          </button>
+
+        </div>
+
+      `).join("");
+
+  }catch(error){
+
+    container.innerHTML =
+      `<div class="card muted">
+        Gagal memuat gacha.
+      </div>`;
+
+    console.error(error);
+  }
+}
+
+
+/* =========================
+   PLAY GACHA
+========================= */
+
+async function playGacha(boxId, boxName, price){
+
+  if(!currentUser){
+
+    alert("Silakan login terlebih dahulu.");
+
+    return;
+  }
+
+  if(Number(currentUser.coins) < Number(price)){
+
+    alert(
+      "Coins tidak cukup.\n\n" +
+      "Harga: " +
+      Number(price).toLocaleString("id-ID") +
+      "\nSaldo: " +
+      Number(currentUser.coins).toLocaleString("id-ID")
+    );
+
+    return;
+  }
+
+  const confirmed =
+    confirm(
+      "Buka " + boxName + "?\n\n" +
+      "Harga: " +
+      Number(price).toLocaleString("id-ID") +
+      " coins"
+    );
+
+  if(!confirmed) return;
+
+  const buttons =
+    document.querySelectorAll("#boxes button");
+
+  buttons.forEach(button => {
+    button.disabled = true;
+  });
+
+  try{
+
+    const result =
+      await api("/api/gacha",{
+        method:"POST",
+        body:JSON.stringify({
+          box_id:boxId
+        })
+      });
+
+    if(!result.data.ok){
+
+      alert(
+        result.data.error ||
+        "Gacha gagal."
+      );
+
+      return;
+    }
+
+    const data =
+      result.data;
+
+    currentUser =
+      data.user;
+
+    updateCoins();
+
+    showReward(
+      data.reward
+    );
+
+    await loadInventory();
+
+    await loadBoxes();
+
+  }catch(error){
+
+    alert(
+      "Terjadi kesalahan saat membuka gacha."
+    );
+
+    console.error(error);
+
+  }finally{
+
+    document
+      .querySelectorAll("#boxes button")
+      .forEach(button => {
+        button.disabled = false;
+      });
+  }
+}
+
+
+/* =========================
+   SHOW REWARD
+========================= */
+
+function showReward(reward){
+
+  const section =
+    document.getElementById("rewardSection");
+
+  document
+    .getElementById("rewardName")
+    .textContent =
+      reward.name || "Mystery Item";
+
+  document
+    .getElementById("rewardProbability")
+    .textContent =
+      "Probability: " +
+      Number(reward.probability || 0) +
+      "%";
+
+  section.classList.remove("hidden");
+
+  section.scrollIntoView({
+    behavior:"smooth",
+    block:"center"
+  });
+}
+
+
+/* =========================
+   LOAD INVENTORY
+========================= */
+
+async function loadInventory(){
+
+  const container =
+    document.getElementById("inventory");
+
+  container.innerHTML =
+    `<div class="card muted">
+      Memuat inventory...
+    </div>`;
+
+  try{
+
+    const result =
+      await api("/api/inventory");
+
+    if(!result.data.ok){
+
+      container.innerHTML =
+        `<div class="card muted">
+          ${escapeHtml(result.data.error || "Gagal memuat inventory.")}
+        </div>`;
+
+      return;
+    }
+
+    const items =
+      result.data.inventory || [];
+
+    if(items.length === 0){
+
+      container.innerHTML =
+        `<div class="card muted">
+          Inventory masih kosong.
+        </div>`;
+
+      return;
+    }
+
+    container.innerHTML =
+      items.map(item => `
+
+        <div class="card inventory-item">
+
+          <div>
+
+            <div style="font-weight:800">
+              🎁 ${escapeHtml(item.name)}
+            </div>
+
+            <div class="muted">
+              ${escapeHtml(item.created_at || "")}
+            </div>
+
+          </div>
+
+          <div class="status">
+            ${escapeHtml(item.status || "won")}
+          </div>
+
+        </div>
+
+      `).join("");
+
+  }catch(error){
+
+    container.innerHTML =
+      `<div class="card muted">
+        Gagal memuat inventory.
+      </div>`;
+
+    console.error(error);
+  }
+}
+
+
+/* =========================
+   LOGOUT
+========================= */
+
+async function logout(){
+
+  try{
+
+    await api("/api/logout",{
+      method:"POST"
+    });
+
+  }catch(error){
+
+    console.error(error);
+
+  }finally{
+
+    currentUser = null;
+
+    showAuth();
+
+    document
+      .getElementById("email")
+      .value = "";
+
+    document
+      .getElementById("password")
+      .value = "";
+
+    document
+      .getElementById("authMessage")
+      .textContent =
+        "Kamu sudah logout.";
+
+    window.scrollTo({
+      top:0,
+      behavior:"smooth"
+    });
+  }
+}
+
+
+/* =========================
+   ESCAPE HTML
+========================= */
+
+function escapeHtml(value){
+
+  return String(value ?? "")
+    .replace(/&/g,"&amp;")
+    .replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;")
+    .replace(/'/g,"&#039;");
+}
+
+
+function escapeAttr(value){
+
+  return String(value ?? "")
+    .replace(/'/g,"\\'")
+    .replace(/"/g,"&quot;");
+}
+
+
+/* =========================
+   NAVIGATION
+========================= */
+
+function scrollToTop(){
+
+  window.scrollTo({
+    top:0,
+    behavior:"smooth"
+  });
+}
+
+
+function scrollToGacha(){
+
+  const element =
+    document.getElementById("boxes");
+
+  if(element){
+
+    element.scrollIntoView({
+      behavior:"smooth"
+    });
+  }
+}
+
+
+function scrollToInventory(){
+
+  const element =
+    document.getElementById("inventory");
+
+  if(element){
+
+    element.scrollIntoView({
+      behavior:"smooth"
+    });
+  }
+}
+
+
+/* =========================
+   START
+========================= */
+
+checkSession();
+
 </script>
+
 </body>
 </html>
