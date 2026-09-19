@@ -952,6 +952,9 @@ async function handleRequest(request, env) {
 
   if (request.method === "GET" && path === "/api/me") {
     return handleMe(request, env);
+    if (request.method === "PUT" && path === "/api/address") {
+  return handleAddress(request, env);
+}
   }
 async function handleAddress(request, env) {
   const user = await getUser(request, env);
