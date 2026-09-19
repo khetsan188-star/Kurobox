@@ -1,1 +1,704 @@
+<!doctype html>
+
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>KuroBox — Gacha</title>
+
+<style>
+*{box-sizing:border-box}
+
+body{
+  margin:0;
+  background:#08080d;
+  color:#fff;
+  font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+}
+
+main{
+  max-width:760px;
+  margin:auto;
+  padding:20px 16px 110px;
+}
+
+.brand{
+  font-size:30px;
+  font-weight:950;
+  letter-spacing:-1.5px;
+}
+
+.brand b{color:#ff4ca5}
+
+.subtitle{
+  color:#858592;
+  font-size:13px;
+  margin-top:2px;
+}
+
+.topbar{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
+
+.coins{
+  padding:10px 14px;
+  border:1px solid #343441;
+  border-radius:14px;
+  background:#15151d;
+  font-weight:850;
+}
+
+.card{
+  padding:18px;
+  margin-top:14px;
+  border:1px solid #292934;
+  border-radius:20px;
+  background:#111118;
+}
+
+.title{
+  margin-top:28px;
+}
+
+.title h2{
+  margin:0;
+  font-size:21px;
+}
+
+.empty{
+  color:#777783;
+  text-align:center;
+  padding:22px;
+}
+
+.box-top{
+  display:flex;
+  gap:15px;
+  align-items:center;
+}
+
+.box-art{
+  width:72px;
+  height:72px;
+  flex:none;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:18px;
+  background:linear-gradient(145deg,#32142d,#181421);
+  border:1px solid #49334a;
+  font-size:35px;
+}
+
+.box-name{
+  font-size:18px;
+  font-weight:900;
+}
+
+.description{
+  margin-top:4px;
+  color:#898995;
+  font-size:13px;
+}
+
+.price{
+  margin-top:9px;
+  color:#ff67b1;
+  font-weight:900;
+}
+
+.actions{
+  display:flex;
+  gap:9px;
+  margin-top:16px;
+}
+
+button{
+  border:0;
+  border-radius:13px;
+  padding:12px 16px;
+  color:#fff;
+  background:#ff3f9f;
+  font-weight:900;
+  cursor:pointer;
+}
+
+button:disabled{
+  opacity:.5;
+  cursor:not-allowed;
+}
+
+.secondary{
+  background:#282832;
+}
+
+.hidden{
+  display:none!important;
+}
+
+.message{
+  color:#92929e;
+  font-size:13px;
+  margin-top:10px;
+}
+
+nav{
+  position:fixed;
+  z-index:20;
+  bottom:0;
+  left:0;
+  right:0;
+  padding:10px;
+  background:rgba(13,13,19,.94);
+  backdrop-filter:blur(15px);
+  border-top:1px solid #282832;
+}
+
+.nav{
+  max-width:760px;
+  margin:auto;
+  display:flex;
+  justify-content:space-around;
+  color:#777783;
+  font-size:12px;
+}
+
+.nav div{
+  cursor:pointer;
+  padding:5px 10px;
+}
+
+.nav .active{
+  color:#ff58aa;
+  font-weight:900;
+}
+</style>
+
+</head>
+
+<body>
+
+<main>
+
+  <div class="topbar">
+
+```
+<div>
+  <div class="brand">🦊 Kuro<b>Box</b></div>
+  <div class="subtitle">Gacha • Collect • Discover</div>
+</div>
+
+<div id="coinDisplay" class="coins hidden">
+  🪙 <span id="coins">0</span>
+</div>
+```
+
+  </div>
+
+  <section id="loginMessage" class="card">
+    <div class="empty">
+      Memeriksa login...
+    </div>
+  </section>
+
+  <section id="gachaPage" class="hidden">
+
+```
+<div class="title">
+  <h2>🎲 Gacha</h2>
+</div>
+
+<div id="boxes">
+  <div class="card empty">
+    Memuat box...
+  </div>
+</div>
+
+<div id="rewardSection" class="card hidden">
+
+  <div class="title">
+    <h2>✨ Your Reward</h2>
+  </div>
+
+  <div style="text-align:center;padding:20px">
+
+    <div style="font-size:60px">
+      🎁
+    </div>
+
+    <div id="rewardName"
+         style="font-size:25px;font-weight:900;color:#ff6eb7">
+      -
+    </div>
+
+    <div id="rewardProbability" class="message"></div>
+
+  </div>
+
+</div>
+```
+
+  </section>
+
+</main>
+
+<nav>
+  <div class="nav">
+
+```
+<div onclick="go('/')">
+  🏠 Home
+</div>
+
+<div class="active">
+  🎲 Gacha
+</div>
+
+<div onclick="go('/inventory.html')">
+  📦 Inventory
+</div>
+
+<div onclick="go('/profile.html')">
+  👤 Profil
+</div>
+```
+
+  </div>
+</nav>
+
+<script>
+
+let currentUser=null;
+
+
+/* API */
+
+async function api(url,options={}){
+
+  const response=await fetch(url,{
+    credentials:"same-origin",
+    ...options,
+    headers:{
+      "Content-Type":"application/json",
+      ...(options.headers||{})
+    }
+  });
+
+  let data;
+
+  try{
+    data=await response.json();
+  }catch{
+    data={
+      ok:false,
+      error:"Response server tidak valid."
+    };
+  }
+
+  return{
+    status:response.status,
+    data
+  };
+}
+
+
+/* SESSION */
+
+async function checkSession(){
+
+  try{
+
+    const result=await api("/api/me");
+
+    if(!result.data.ok){
+
+      showLoginRequired();
+      return;
+
+    }
+
+    currentUser=result.data.user;
+
+    document
+      .getElementById("loginMessage")
+      .classList.add("hidden");
+
+    document
+      .getElementById("gachaPage")
+      .classList.remove("hidden");
+
+    document
+      .getElementById("coinDisplay")
+      .classList.remove("hidden");
+
+    updateCoins();
+
+    loadBoxes();
+
+  }catch(error){
+
+    showLoginRequired();
+
+  }
+
+}
+
+
+/* LOGIN REQUIRED */
+
+function showLoginRequired(){
+
+  document.getElementById("loginMessage").innerHTML=`
+
+    <div style="text-align:center">
+
+      <div style="font-size:45px">
+        🔐
+      </div>
+
+      <h2>Silakan Login</h2>
+
+      <p class="message">
+        Kamu harus login terlebih dahulu
+        untuk menggunakan Gacha.
+      </p>
+
+      <button onclick="go('/')">
+        Login / Daftar
+      </button>
+
+    </div>
+
+  `;
+
+}
+
+
+/* COINS */
+
+function updateCoins(){
+
+  document.getElementById("coins").textContent=
+    Number(currentUser?.coins||0)
+      .toLocaleString("id-ID");
+
+}
+
+
+/* LOAD BOXES */
+
+async function loadBoxes(){
+
+  const container=document.getElementById("boxes");
+
+  try{
+
+    const result=await api("/api/boxes");
+
+    if(!result.data.ok){
+
+      container.innerHTML=`
+
+        <div class="card empty">
+          ${escapeHtml(
+            result.data.error ||
+            "Gagal memuat box."
+          )}
+        </div>
+
+      `;
+
+      return;
+
+    }
+
+    const boxes=result.data.boxes||[];
+
+    if(!boxes.length){
+
+      container.innerHTML=`
+
+        <div class="card empty">
+          Belum ada mystery box.
+        </div>
+
+      `;
+
+      return;
+
+    }
+
+    container.innerHTML=boxes.map(box=>`
+
+      <div class="card">
+
+        <div class="box-top">
+
+          <div class="box-art">
+            🎁
+          </div>
+
+          <div>
+
+            <div class="box-name">
+              ${escapeHtml(box.name)}
+            </div>
+
+            <div class="description">
+              ${escapeHtml(
+                box.description ||
+                "Mystery collectible"
+              )}
+            </div>
+
+            <div class="price">
+              🪙 ${Number(
+                box.price_coins
+              ).toLocaleString("id-ID")} coins
+            </div>
+
+          </div>
+
+        </div>
+
+        <div class="actions">
+
+          <button
+            onclick="playGacha(
+              ${Number(box.id)},
+              '${escapeAttr(box.name)}',
+              ${Number(box.price_coins)}
+            )">
+
+            🎲 Buka Box
+
+          </button>
+
+        </div>
+
+      </div>
+
+    `).join("");
+
+  }catch(error){
+
+    container.innerHTML=`
+
+      <div class="card empty">
+        Gagal memuat mystery box.
+      </div>
+
+    `;
+
+    console.error(error);
+
+  }
+
+}
+
+
+/* GACHA */
+
+async function playGacha(boxId,boxName,price){
+
+  if(!currentUser){
+
+    alert("Silakan login terlebih dahulu.");
+    return;
+
+  }
+
+  if(Number(currentUser.coins)<Number(price)){
+
+    alert(
+      "Coins tidak cukup.\n\n"+
+      "Harga: "+
+      Number(price).toLocaleString("id-ID")+
+      "\nSaldo: "+
+      Number(currentUser.coins)
+        .toLocaleString("id-ID")
+    );
+
+    return;
+
+  }
+
+  if(!confirm(
+
+    "Buka "+boxName+"?\n\n"+
+    "Harga: "+
+    Number(price).toLocaleString("id-ID")+
+    " coins"
+
+  )) return;
+
+
+  document
+    .querySelectorAll("#boxes button")
+    .forEach(button=>{
+      button.disabled=true;
+    });
+
+
+  try{
+
+    const result=await api("/api/gacha",{
+
+      method:"POST",
+
+      body:JSON.stringify({
+        box_id:boxId
+      })
+
+    });
+
+
+    if(!result.data.ok){
+
+      alert(
+        result.data.error ||
+        "Gacha gagal."
+      );
+
+      return;
+
+    }
+
+
+    currentUser=result.data.user;
+
+    updateCoins();
+
+    showReward(
+      result.data.reward
+    );
+
+
+  }catch(error){
+
+    console.error(error);
+
+    alert(
+      "Terjadi kesalahan saat membuka gacha."
+    );
+
+  }finally{
+
+    document
+      .querySelectorAll("#boxes button")
+      .forEach(button=>{
+        button.disabled=false;
+      });
+
+  }
+
+}
+
+
+/* REWARD */
+
+function showReward(reward){
+
+  const section=
+    document.getElementById(
+      "rewardSection"
+    );
+
+  const name=
+    document.getElementById(
+      "rewardName"
+    );
+
+  const probability=
+    document.getElementById(
+      "rewardProbability"
+    );
+
+
+  const rarity=
+    reward?.rarity ||
+    "Common";
+
+
+  const icon={
+
+    Common:"✨",
+    Rare:"💎",
+    Epic:"🔮",
+    Legendary:"👑"
+
+  };
+
+
+  name.textContent=
+    (icon[rarity]||"✨")+
+    " "+
+    (reward?.name||
+     "Mystery Item");
+
+
+  probability.textContent=
+    rarity+
+    " • Probability: "+
+    Number(
+      reward?.probability||0
+    )+
+    "%";
+
+
+  section.classList.remove(
+    "hidden"
+  );
+
+
+  section.scrollIntoView({
+    behavior:"smooth",
+    block:"center"
+  });
+
+}
+
+
+/* NAVIGATION */
+
+function go(path){
+
+  window.location.href=path;
+
+}
+
+
+/* ESCAPE */
+
+function escapeHtml(value){
+
+  return String(value??"")
+    .replace(/&/g,"&amp;")
+    .replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;")
+    .replace(/'/g,"&#039;");
+
+}
+
+
+function escapeAttr(value){
+
+  return String(value??"")
+    .replace(/'/g,"\\'")
+    .replace(/"/g,"&quot;");
+
+}
+
+
+/* START */
+
+checkSession();
+
+</script>
+
+</body>
+</html>
 
