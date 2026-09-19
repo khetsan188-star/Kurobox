@@ -1,10 +1,16 @@
 {
-  "$schema": "node_modules/wrangler/config-schema.json",
   "name": "kurobox",
   "main": "worker.js",
   "compatibility_date": "2026-09-09",
   "assets": {
-    "directory": "public",
+    "directory": "./public",
     "binding": "ASSETS"
-  }
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "kurobox-db",
+      "database_id": "ff30c1ab-1c7a-4f41-b5c9-e9e1fb095131"
+    }
+  ]
 }
