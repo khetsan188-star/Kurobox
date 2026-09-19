@@ -366,6 +366,182 @@ nav{
   .coins{font-size:12px;padding:9px 11px}
   .box-art{width:62px;height:62px}
 }
+  /* BLIND BOX OPENING */
+
+.blind-overlay{
+  position:fixed;
+  inset:0;
+  z-index:9999;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:rgba(3,5,15,.96);
+  backdrop-filter:blur(12px);
+}
+
+.blind-overlay.hidden{
+  display:none;
+}
+
+.blind-content{
+  width:100%;
+  max-width:420px;
+  text-align:center;
+  padding:30px 20px;
+  position:relative;
+}
+
+.opening-title{
+  color:#fff;
+  font-size:24px;
+  font-weight:800;
+  margin-bottom:35px;
+  letter-spacing:1px;
+}
+
+.blind-box{
+  width:190px;
+  height:220px;
+  margin:0 auto 30px;
+  position:relative;
+  transform-style:preserve-3d;
+  filter:drop-shadow(0 20px 35px rgba(0,0,0,.6));
+}
+
+.blind-box-body{
+  position:absolute;
+  left:10px;
+  right:10px;
+  top:35px;
+  bottom:0;
+  border-radius:18px;
+  background:linear-gradient(145deg,#191c35,#080a16);
+  border:2px solid rgba(255,255,255,.15);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:#fff;
+  font-size:28px;
+  font-weight:900;
+  letter-spacing:2px;
+  box-shadow:
+    inset 0 0 30px rgba(124,92,255,.25),
+    0 0 35px rgba(124,92,255,.3);
+}
+
+.blind-box-top{
+  position:absolute;
+  top:20px;
+  left:0;
+  right:0;
+  height:55px;
+  border-radius:16px;
+  background:linear-gradient(145deg,#292d50,#111326);
+  border:2px solid rgba(255,255,255,.18);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:#a99cff;
+  font-weight:900;
+  z-index:2;
+}
+
+.blind-box-ribbon{
+  position:absolute;
+  width:52px;
+  height:52px;
+  border-radius:50%;
+  background:#8b5cf6;
+  color:#fff;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:30px;
+  font-weight:900;
+  left:50%;
+  top:105px;
+  transform:translateX(-50%);
+  z-index:3;
+  box-shadow:0 0 25px rgba(139,92,246,.8);
+}
+
+.opening-text{
+  color:#fff;
+  font-size:17px;
+  font-weight:700;
+  min-height:28px;
+}
+
+.opening-effect{
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+}
+
+/* GETAR */
+
+.blind-box.shake{
+  animation:blindShake .12s infinite;
+}
+
+@keyframes blindShake{
+  0%{transform:rotate(0deg) scale(1);}
+  25%{transform:rotate(-3deg) scale(1.02);}
+  50%{transform:rotate(3deg) scale(1.04);}
+  75%{transform:rotate(-2deg) scale(1.02);}
+  100%{transform:rotate(0deg) scale(1);}
+}
+
+/* OPEN */
+
+.blind-box.open{
+  animation:blindOpen .8s forwards;
+}
+
+@keyframes blindOpen{
+  0%{
+    transform:scale(1) rotate(0);
+    opacity:1;
+  }
+  60%{
+    transform:scale(1.2) rotate(5deg);
+    opacity:1;
+  }
+  100%{
+    transform:scale(2.4) rotate(-8deg);
+    opacity:0;
+  }
+}
+
+.opening-effect::before,
+.opening-effect::after{
+  content:"✨";
+  position:absolute;
+  font-size:40px;
+  animation:stars 1s infinite alternate;
+}
+
+.opening-effect::before{
+  top:35%;
+  left:15%;
+}
+
+.opening-effect::after{
+  top:45%;
+  right:15%;
+  animation-delay:.3s;
+}
+
+@keyframes stars{
+  from{
+    transform:scale(.7) rotate(0);
+    opacity:.3;
+  }
+  to{
+    transform:scale(1.4) rotate(25deg);
+    opacity:1;
+  }
+}
 </style>
 </head>
 
@@ -472,7 +648,30 @@ nav{
 
     </section>
 
+<!-- BLIND BOX OPENING -->
+<div id="blindBoxOverlay" class="blind-overlay hidden">
 
+  <div class="blind-content">
+
+    <div class="opening-title">
+      🎁 BLIND BOX
+    </div>
+
+    <div id="blindBox" class="blind-box">
+      <div class="blind-box-top">MYSTERY</div>
+      <div class="blind-box-body">KUROBOX</div>
+      <div class="blind-box-ribbon">?</div>
+    </div>
+
+    <div id="openingText" class="opening-text">
+      Bersiap...
+    </div>
+
+    <div id="openingEffect" class="opening-effect"></div>
+
+  </div>
+
+</div>
     <!-- INVENTORY -->
     <section id="inventorySection" class="section">
 
@@ -812,7 +1011,16 @@ async function playGacha(boxId,boxName,price){
     .forEach(button=>button.disabled=true);
 
   try{
+const overlay = document.getElementById("blindBoxOverlay");
+const blindBox = document.getElementById("blindBox");
+const openingText = document.getElementById("openingText");
 
+overlay.classList.remove("hidden");
+
+blindBox.classList.remove("open");
+blindBox.classList.add("shake");
+
+openingText.textContent = "🎁 Membuka Blind Box...";
     const result=await api("/api/gacha",{
       method:"POST",
       body:JSON.stringify({box_id:boxId})
@@ -824,11 +1032,24 @@ async function playGacha(boxId,boxName,price){
       return;
     }
 
-  currentUser=result.data.user;
+ currentUser=result.data.user;
 
 updateCoins();
 
-await playGachaAnimation(result.data.reward);
+blindBox.classList.remove("shake");
+
+openingText.textContent = "✨ Hadiahmu ditemukan!";
+
+setTimeout(() => {
+  blindBox.classList.add("open");
+  openingText.textContent = "🎉 Membuka hadiah...";
+}, 700);
+
+await new Promise(resolve => setTimeout(resolve, 1500));
+
+overlay.classList.add("hidden");
+
+showReward(result.data.reward);
 
 await loadInventory();
     await loadBoxes();
