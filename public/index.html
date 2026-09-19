@@ -611,6 +611,83 @@ nav{
 }
   /* RARITY OPENING EFFECT */
 
+.blind-overlay.rarity-common .opening-effect::before,
+.blind-overlay.rarity-common .opening-effect::after{
+  content:"✨";
+  font-size:35px;
+}
+
+.blind-overlay.rarity-rare .opening-effect::before{
+  content:"💎";
+  font-size:50px;
+  animation:rareParticle 1s infinite alternate;
+}
+
+.blind-overlay.rarity-rare .opening-effect::after{
+  content:"✨";
+  font-size:45px;
+  animation:rareParticle 1.2s infinite alternate-reverse;
+}
+
+.blind-overlay.rarity-epic .opening-effect::before{
+  content:"🔮";
+  font-size:55px;
+  animation:epicParticle .8s infinite alternate;
+}
+
+.blind-overlay.rarity-epic .opening-effect::after{
+  content:"✨";
+  font-size:60px;
+  animation:epicParticle 1s infinite alternate-reverse;
+}
+
+.blind-overlay.rarity-legendary .opening-effect::before{
+  content:"👑";
+  font-size:65px;
+  animation:legendaryParticle .6s infinite alternate;
+}
+
+.blind-overlay.rarity-legendary .opening-effect::after{
+  content:"✨";
+  font-size:75px;
+  animation:legendaryParticle .7s infinite alternate-reverse;
+}
+
+@keyframes rareParticle{
+  from{
+    transform:scale(.7) translateY(10px) rotate(-10deg);
+    opacity:.4;
+  }
+  to{
+    transform:scale(1.3) translateY(-20px) rotate(10deg);
+    opacity:1;
+  }
+}
+
+@keyframes epicParticle{
+  from{
+    transform:scale(.6) translateY(15px) rotate(-15deg);
+    opacity:.3;
+  }
+  to{
+    transform:scale(1.5) translateY(-30px) rotate(15deg);
+    opacity:1;
+  }
+}
+
+@keyframes legendaryParticle{
+  from{
+    transform:scale(.6) translateY(20px) rotate(-20deg);
+    opacity:.3;
+    filter:brightness(1);
+  }
+  to{
+    transform:scale(1.7) translateY(-40px) rotate(20deg);
+    opacity:1;
+    filter:brightness(2);
+  }
+}
+
 .blind-overlay.rarity-common{
   background:
     radial-gradient(
