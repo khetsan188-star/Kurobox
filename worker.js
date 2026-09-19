@@ -521,16 +521,43 @@ async function handleMe(request, env) {
     );
   }
 
-  return json({
-    ok: true,
-    user: {
-      id: user.id,
-      email: user.email,
-      coins: Number(user.coins)
-    }
-  });
-}
+  try {
+    const address = await env.DB
+      .prepare(`
+        SELECT
+          id,
+          recipient_name,
+          phone,
+          address,
+          city,
+          province,
+          postal_code,
+          created_at,
+          updated_at
+        FROM user_addresses
+        WHERE user_id = ?
+        LIMIT 1
+      `)
+      .bind(user.id)
+      .first();
 
+    return json({
+      ok: true,
+      user: {
+        id: user.id,
+        email: user.email,
+        coins: Number(user.coins),
+        address: address || null
+      }
+    });
+
+  } catch (error) {
+    return errorResponse(
+      error?.message || "Gagal mengambil data profile.",
+      500
+    );
+  }
+}
 async function handleBoxes(env) {
   try {
     const result = await env.DB
