@@ -1024,14 +1024,7 @@ function playTone(frequency, duration, type="sine", volume=0.08){
 
 
 function playGachaSound(){
-overlay.classList.remove("hidden");
 
-blindBox.classList.remove("open");
-blindBox.classList.add("shake");
-
-openingText.textContent = "🎁 Membuka Blind Box...";
-
-playGachaSound();
   getAudioContext();
 
   // suara mulai
