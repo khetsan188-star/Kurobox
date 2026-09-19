@@ -987,29 +987,43 @@ async function loadBoxes(){
 
 let audioCtx = null;
 
-function getAudioContext(){
+async function getAudioContext(){
+
   if(!audioCtx){
     audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   }
 
   if(audioCtx.state === "suspended"){
-    audioCtx.resume();
+    await audioCtx.resume();
   }
 
   return audioCtx;
 }
 
-function playTone(frequency, duration, type="sine", volume=0.08){
+async function playTone(
+  frequency,
+  duration,
+  type = "sine",
+  volume = 0.08
+){
 
-  const ctx = getAudioContext();
+  const ctx = await getAudioContext();
 
   const oscillator = ctx.createOscillator();
   const gain = ctx.createGain();
 
   oscillator.type = type;
-  oscillator.frequency.setValueAtTime(frequency, ctx.currentTime);
 
-  gain.gain.setValueAtTime(volume, ctx.currentTime);
+  oscillator.frequency.setValueAtTime(
+    frequency,
+    ctx.currentTime
+  );
+
+  gain.gain.setValueAtTime(
+    volume,
+    ctx.currentTime
+  );
+
   gain.gain.exponentialRampToValueAtTime(
     0.001,
     ctx.currentTime + duration
@@ -1019,9 +1033,38 @@ function playTone(frequency, duration, type="sine", volume=0.08){
   gain.connect(ctx.destination);
 
   oscillator.start();
-  oscillator.stop(ctx.currentTime + duration);
+
+  oscillator.stop(
+    ctx.currentTime + duration
+  );
 }
 
+async function playGachaSound(){
+
+  await getAudioContext();
+
+  // suara mulai
+  await playTone(220,0.15,"sine",0.08);
+
+  setTimeout(()=>{
+    playTone(330,0.15,"sine",0.09);
+  },150);
+
+  setTimeout(()=>{
+    playTone(440,0.15,"sine",0.10);
+  },300);
+
+  setTimeout(()=>{
+    playTone(550,0.18,"triangle",0.12);
+  },450);
+
+  // suara reveal
+  setTimeout(()=>{
+    playTone(880,0.25,"triangle",0.15);
+    playTone(1100,0.35,"sine",0.10);
+  },1200);
+
+}
 
 function playGachaSound(){
 
