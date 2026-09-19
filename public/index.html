@@ -1336,34 +1336,88 @@ async function playGachaSound(){
 }
 async function playRaritySound(rarity){
 
+async function playGachaSound(){
+
   const ctx = await getAudioContext();
+
+  const notes = [
+    [220, 0],
+    [330, 220],
+    [440, 440],
+    [550, 660]
+  ];
+
+  notes.forEach(([frequency, delay]) => {
+
+    setTimeout(() => {
+
+      const oscillator = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      oscillator.type = "sine";
+
+      oscillator.frequency.setValueAtTime(
+        frequency,
+        ctx.currentTime
+      );
+
+      gain.gain.setValueAtTime(
+        0.15,
+        ctx.currentTime
+      );
+
+      gain.gain.exponentialRampToValueAtTime(
+        0.001,
+        ctx.currentTime + 0.18
+      );
+
+      oscillator.connect(gain);
+      gain.connect(ctx.destination);
+
+      oscillator.start();
+      oscillator.stop(ctx.currentTime + 0.18);
+
+    }, delay);
+
+  });
+
+  // Tunggu sampai opening sound benar-benar selesai
+  await new Promise(resolve => setTimeout(resolve, 950));
+
+}
+async function playRaritySound(rarity){
+
+  const ctx = await getAudioContext();
+
+  // Jeda supaya opening dan rarity benar-benar terpisah
+  await new Promise(resolve => setTimeout(resolve, 300));
 
   const notes = {
 
     Common: [
       [440, 0],
-      [550, 180]
+      [550, 220]
     ],
 
     Rare: [
       [523, 0],
-      [659, 180],
-      [784, 360]
+      [659, 220],
+      [784, 440]
     ],
 
     Epic: [
       [440, 0],
-      [554, 150],
-      [659, 300],
-      [880, 450]
+      [554, 220],
+      [659, 440],
+      [880, 660]
     ],
 
     Legendary: [
       [523, 0],
-      [659, 150],
-      [784, 300],
-      [1046, 450],
-      [1318, 650]
+      [659, 220],
+      [784, 440],
+      [1046, 660],
+      [1318, 900]
     ]
 
   };
@@ -1401,79 +1455,24 @@ async function playRaritySound(rarity){
       gain.connect(ctx.destination);
 
       oscillator.start();
-      oscillator.stop(ctx.currentTime + 0.35);
+      oscillator.stop(
+        ctx.currentTime + 0.35
+      );
 
     }, delay);
 
   });
 
-}
-  async function playRaritySound(rarity){
+  // Tunggu sequence rarity selesai
+  const lastDelay =
+    sequence[sequence.length - 1][1];
 
-  const ctx = await getAudioContext();
-
-  if(rarity === "Common"){
-
-    await playTone(440, 0.18, "sine", 0.10);
-    setTimeout(() => {
-      playTone(550, 0.20, "sine", 0.10);
-    }, 160);
-
-  }
-
-  else if(rarity === "Rare"){
-
-    await playTone(523, 0.18, "triangle", 0.12);
-
-    setTimeout(() => {
-      playTone(659, 0.18, "triangle", 0.12);
-    }, 160);
-
-    setTimeout(() => {
-      playTone(784, 0.28, "triangle", 0.14);
-    }, 320);
-
-  }
-
-  else if(rarity === "Epic"){
-
-    await playTone(440, 0.18, "sine", 0.12);
-
-    setTimeout(() => {
-      playTone(554, 0.18, "triangle", 0.13);
-    }, 150);
-
-    setTimeout(() => {
-      playTone(659, 0.18, "triangle", 0.14);
-    }, 300);
-
-    setTimeout(() => {
-      playTone(880, 0.35, "sine", 0.16);
-    }, 450);
-
-  }
-
-  else if(rarity === "Legendary"){
-
-    await playTone(523, 0.18, "triangle", 0.14);
-
-    setTimeout(() => {
-      playTone(659, 0.18, "triangle", 0.15);
-    }, 150);
-
-    setTimeout(() => {
-      playTone(784, 0.18, "triangle", 0.16);
-    }, 300);
-
-    setTimeout(() => {
-      playTone(1046, 0.30, "triangle", 0.18);
-    }, 450);
-
-    setTimeout(() => {
-      playTone(1318, 0.50, "sine", 0.20);
-    }, 650);
-
-  }
+  await new Promise(resolve =>
+    setTimeout(
+      resolve,
+      lastDelay + 400
+    )
+  );
 
 }
 async function playGacha(boxId,boxName,price){
