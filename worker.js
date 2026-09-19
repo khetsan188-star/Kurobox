@@ -100,16 +100,41 @@ async function hashPassword(password) {
 
 async function verifyPassword(password, storedHash) {
   try {
+    let algorithm = "pbkdf2";
+    let iterations = PBKDF2_ITERATIONS;
+    let salt;
+    let expectedHash;
+
     const parts = storedHash.split("$");
 
-    if (parts.length !== 4) {
-      return false;
+    // Format baru:
+    // pbkdf2$100000$salt$hash
+    if (parts.length === 4) {
+      algorithm = parts[0];
+      iterations = Number(parts[1]);
+      salt = base64ToBytes(parts[2]);
+      expectedHash = base64ToBytes(parts[3]);
     }
 
-    const algorithm = parts[0];
-    const iterations = Number(parts[1]);
-    const salt = base64ToBytes(parts[2]);
-    const expectedHash = base64ToBytes(parts[3]);
+    // Format lama:
+    // salt:hash
+    else if (storedHash.includes(":")) {
+      const legacyParts = storedHash.split(":");
+
+      if (legacyParts.length !== 2) {
+        return false;
+      }
+
+      salt = base64ToBytes(legacyParts[0]);
+      expectedHash = base64ToBytes(legacyParts[1]);
+
+      // Password lama dibuat dengan 100000 iterations
+      iterations = 100000;
+    }
+
+    else {
+      return false;
+    }
 
     if (algorithm !== "pbkdf2") {
       return false;
@@ -151,6 +176,7 @@ async function verifyPassword(password, storedHash) {
     }
 
     return difference === 0;
+
   } catch {
     return false;
   }
