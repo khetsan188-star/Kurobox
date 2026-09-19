@@ -8,7 +8,133 @@
 
 <style>
 *{box-sizing:border-box}
+<script>
+let currentUser = null;
 
+async function api(url, options = {}) {
+  const res = await fetch(url, {
+    credentials: "same-origin",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...(options.headers || {})
+    }
+  });
+
+  const data = await res.json().catch(() => null);
+
+  if (!res.ok) {
+    throw new Error(data?.error || `HTTP ${res.status}`);
+  }
+
+  return data;
+}
+
+async function checkSession() {
+  try {
+    const result = await api("/api/me");
+
+    currentUser = result?.data?.user || result?.user || null;
+
+    if (!currentUser) {
+      showMessage("Silakan login terlebih dahulu.");
+      return;
+    }
+
+    document.getElementById("coinDisplay").textContent =
+      `🪙 ${currentUser.coins ?? 0}`;
+
+    await loadInventory();
+
+  } catch (err) {
+    console.error("Session error:", err);
+    showMessage("Silakan login terlebih dahulu.");
+  }
+}
+
+async function loadInventory() {
+  const container = document.getElementById("inventoryList");
+
+  if (!container) {
+    console.error("inventoryList tidak ditemukan");
+    return;
+  }
+
+  container.innerHTML = `
+    <div class="empty">Memuat inventory...</div>
+  `;
+
+  try {
+    const result = await api("/api/inventory");
+
+    const items =
+      result?.data?.items ||
+      result?.data?.inventory ||
+      result?.items ||
+      result?.inventory ||
+      [];
+
+    if (!items.length) {
+      container.innerHTML = `
+        <div class="empty">
+          Inventory kamu masih kosong.
+        </div>
+      `;
+      return;
+    }
+
+    container.innerHTML = items.map(item => `
+      <div class="card inventory-item">
+        <div class="item-icon">🎁</div>
+
+        <div class="item-info">
+          <div class="item-name">
+            ${escapeHtml(item.name || item.reward_name || "Reward")}
+          </div>
+
+          <div class="item-date">
+            ${escapeHtml(item.created_at || item.date || "")}
+          </div>
+        </div>
+
+        <div class="status">
+          ${escapeHtml(item.rarity || "Common")}
+        </div>
+      </div>
+    `).join("");
+
+  } catch (err) {
+    console.error("Inventory error:", err);
+
+    container.innerHTML = `
+      <div class="empty">
+        Gagal memuat inventory.
+      </div>
+    `;
+  }
+}
+
+function showMessage(message) {
+  const container = document.getElementById("inventoryList");
+
+  if (container) {
+    container.innerHTML = `
+      <div class="empty">${escapeHtml(message)}</div>
+    `;
+  }
+}
+
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+checkSession();
+</script>
 body{
   margin:0;
   background:#08080d;
