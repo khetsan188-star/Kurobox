@@ -947,7 +947,7 @@ async function handleAddress(request, env) {
       "Body JSON tidak valid."
     );
   }
-
+async function handleRequest(request, env) {
   const recipientName = String(body.recipient_name || "").trim();
   const phone = String(body.phone || "").trim();
   const address = String(body.address || "").trim();
