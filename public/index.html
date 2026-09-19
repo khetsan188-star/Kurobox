@@ -1523,6 +1523,7 @@ openingText.textContent = "🎁 Membuka Blind Box...";
  currentUser=result.data.user;
     const rarity = result.data.reward?.rarity || "Common";
 await playRaritySound(rarity);
+    console.log("🔊 RARITY SOUND:", rarity);
 blindOverlay.classList.remove(
   "rarity-common",
   "rarity-rare",
