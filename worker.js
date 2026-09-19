@@ -197,23 +197,38 @@ async function getUser(request, env) {
     return null;
   }
 
-  const result = await env.DB
-    .prepare(`
-      SELECT
-        u.id,
-        u.email,
-        u.coins
-      FROM sessions s
-      JOIN users u ON u.id = s.user_id
-      WHERE s.token = ?
-        AND s.expires_at > CURRENT_TIMESTAMP
-      LIMIT 1
-    `)
-    .bind(token)
-    .first();
-
-  return result || null;
-}
+await env.DB
+  .prepare(`
+    INSERT INTO user_addresses (
+      user_id,
+      recipient_name,
+      phone,
+      address,
+      city,
+      province,
+      postal_code
+    )
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+    ON CONFLICT(user_id)
+    DO UPDATE SET
+      recipient_name = excluded.recipient_name,
+      phone = excluded.phone,
+      address = excluded.address,
+      city = excluded.city,
+      province = excluded.province,
+      postal_code = excluded.postal_code,
+      updated_at = CURRENT_TIMESTAMP
+  `)
+  .bind(
+    user.id,
+    recipientName,
+    phone,
+    address,
+    city,
+    province,
+    postalCode
+  )
+  .run();
 
 async function readJson(request) {
   try {
