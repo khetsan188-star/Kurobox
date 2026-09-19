@@ -953,7 +953,110 @@ async function handleRequest(request, env) {
   if (request.method === "GET" && path === "/api/me") {
     return handleMe(request, env);
   }
+async function handleAddress(request, env) {
+  const user = await getUser(request, env);
 
+  if (!user) {
+    return errorResponse(
+      "Silakan login terlebih dahulu.",
+      401
+    );
+  }
+
+  const body = await readJson(request);
+
+  if (!body) {
+    return errorResponse(
+      "Body JSON tidak valid."
+    );
+  }
+
+  const recipientName = String(body.recipient_name || "").trim();
+  const phone = String(body.phone || "").trim();
+  const address = String(body.address || "").trim();
+  const city = String(body.city || "").trim();
+  const province = String(body.province || "").trim();
+  const postalCode = String(body.postal_code || "").trim();
+
+  if (
+    !recipientName ||
+    !phone ||
+    !address ||
+    !city ||
+    !province ||
+    !postalCode
+  ) {
+    return errorResponse(
+      "Semua data alamat wajib diisi."
+    );
+  }
+
+  try {
+    await env.DB
+      .prepare(`
+        INSERT INTO user_addresses (
+          user_id,
+          recipient_name,
+          phone,
+          address,
+          city,
+          province,
+          postal_code
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+        ON CONFLICT(user_id)
+        DO UPDATE SET
+          recipient_name = excluded.recipient_name,
+          phone = excluded.phone,
+          address = excluded.address,
+          city = excluded.city,
+          province = excluded.province,
+          postal_code = excluded.postal_code,
+          updated_at = CURRENT_TIMESTAMP
+      `)
+      .bind(
+        user.id,
+        recipientName,
+        phone,
+        address,
+        city,
+        province,
+        postalCode
+      )
+      .run();
+
+    const savedAddress = await env.DB
+      .prepare(`
+        SELECT
+          id,
+          recipient_name,
+          phone,
+          address,
+          city,
+          province,
+          postal_code,
+          created_at,
+          updated_at
+        FROM user_addresses
+        WHERE user_id = ?
+        LIMIT 1
+      `)
+      .bind(user.id)
+      .first();
+
+    return json({
+      ok: true,
+      message: "Alamat berhasil disimpan.",
+      address: savedAddress
+    });
+
+  } catch (error) {
+    return errorResponse(
+      error?.message || "Gagal menyimpan alamat.",
+      500
+    );
+  }
+}
   if (request.method === "GET" && path === "/api/boxes") {
     return handleBoxes(env);
   }
