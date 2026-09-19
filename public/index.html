@@ -1307,38 +1307,6 @@ async function playGachaSound(){
 
   const ctx = await getAudioContext();
 
-  // Suara pertama langsung
-  const oscillator = ctx.createOscillator();
-  const gain = ctx.createGain();
-
-  oscillator.type = "sine";
-  oscillator.frequency.value = 220;
-
-  gain.gain.value = 0.15;
-
-  oscillator.connect(gain);
-  gain.connect(ctx.destination);
-
-  oscillator.start();
-  oscillator.stop(ctx.currentTime + 0.2);
-
-  // Nada berikutnya
-  setTimeout(() => playTone(330, 0.2, "sine", 0.15), 200);
-  setTimeout(() => playTone(440, 0.2, "sine", 0.15), 400);
-  setTimeout(() => playTone(550, 0.2, "triangle", 0.15), 600);
-
-  // Reveal
-  setTimeout(() => {
-    playTone(880, 0.25, "triangle", 0.18);
-    playTone(1100, 0.35, "sine", 0.15);
-  }, 900);
-
-}
-
-async function playGachaSound(){
-
-  const ctx = await getAudioContext();
-
   const notes = [
     [220, 0],
     [330, 220],
