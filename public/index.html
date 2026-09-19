@@ -1310,8 +1310,6 @@ openingText.textContent = "🎁 Membuka Blind Box...";
  currentUser=result.data.user;
     const rarity = result.data.reward?.rarity || "Common";
 
-const overlay = document.getElementById("blindBoxOverlay");
-
 overlay.classList.remove(
   "rarity-common",
   "rarity-rare",
