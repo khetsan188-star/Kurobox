@@ -649,13 +649,8 @@ export default {
         // =========================
         await env.DB
           .prepare(`
-            INSERT INTO coin_ledger (
-              user_id,
-              amount,
-              type,
-              reference
-            )
-            VALUES (?, ?, 'gacha', ?)
+        INSERT INTO coin_ledger (user_id, amount, type, description)
+VALUES (?, ?, ?, ?)
           `)
           .bind(
             user.id,
