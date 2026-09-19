@@ -983,7 +983,79 @@ async function loadBoxes(){
 
 
 /* GACHA */
+/* SOUND EFFECT */
 
+let audioCtx = null;
+
+function getAudioContext(){
+  if(!audioCtx){
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+
+  if(audioCtx.state === "suspended"){
+    audioCtx.resume();
+  }
+
+  return audioCtx;
+}
+
+function playTone(frequency, duration, type="sine", volume=0.08){
+
+  const ctx = getAudioContext();
+
+  const oscillator = ctx.createOscillator();
+  const gain = ctx.createGain();
+
+  oscillator.type = type;
+  oscillator.frequency.setValueAtTime(frequency, ctx.currentTime);
+
+  gain.gain.setValueAtTime(volume, ctx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(
+    0.001,
+    ctx.currentTime + duration
+  );
+
+  oscillator.connect(gain);
+  gain.connect(ctx.destination);
+
+  oscillator.start();
+  oscillator.stop(ctx.currentTime + duration);
+}
+
+
+function playGachaSound(){
+overlay.classList.remove("hidden");
+
+blindBox.classList.remove("open");
+blindBox.classList.add("shake");
+
+openingText.textContent = "🎁 Membuka Blind Box...";
+
+playGachaSound();
+  getAudioContext();
+
+  // suara mulai
+  playTone(220,0.15,"sine",0.06);
+
+  setTimeout(()=>{
+    playTone(330,0.15,"sine",0.07);
+  },150);
+
+  setTimeout(()=>{
+    playTone(440,0.15,"sine",0.08);
+  },300);
+
+  setTimeout(()=>{
+    playTone(550,0.18,"triangle",0.09);
+  },450);
+
+  // suara reveal
+  setTimeout(()=>{
+    playTone(880,0.25,"triangle",0.12);
+    playTone(1100,0.35,"sine",0.08);
+  },1200);
+
+}
 async function playGacha(boxId,boxName,price){
 
   if(!currentUser){
