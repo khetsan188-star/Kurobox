@@ -1154,6 +1154,7 @@ blindBox.classList.remove("open");
 blindBox.classList.add("shake");
 
 openingText.textContent = "🎁 Membuka Blind Box...";
+    console.log("🔊 PLAY GACHA SOUND");
     await playGachaSound();
     const result=await api("/api/gacha",{
       method:"POST",
