@@ -1334,73 +1334,78 @@ async function playGachaSound(){
   }, 900);
 
 }
-  async function playRaritySound(rarity){
+async function playRaritySound(rarity){
 
   const ctx = await getAudioContext();
 
-  if(rarity === "Common"){
+  const notes = {
 
-    await playTone(440, 0.18, "sine", 0.10);
+    Common: [
+      [440, 0],
+      [550, 180]
+    ],
 
-    setTimeout(() => {
-      playTone(550, 0.20, "sine", 0.10);
-    }, 160);
+    Rare: [
+      [523, 0],
+      [659, 180],
+      [784, 360]
+    ],
 
-  }
+    Epic: [
+      [440, 0],
+      [554, 150],
+      [659, 300],
+      [880, 450]
+    ],
 
-  else if(rarity === "Rare"){
+    Legendary: [
+      [523, 0],
+      [659, 150],
+      [784, 300],
+      [1046, 450],
+      [1318, 650]
+    ]
 
-    await playTone(523, 0.18, "triangle", 0.12);
+  };
 
-    setTimeout(() => {
-      playTone(659, 0.18, "triangle", 0.12);
-    }, 160);
+  const sequence = notes[rarity] || notes.Common;
 
-    setTimeout(() => {
-      playTone(784, 0.28, "triangle", 0.14);
-    }, 320);
-
-  }
-
-  else if(rarity === "Epic"){
-
-    await playTone(440, 0.18, "sine", 0.12);
-
-    setTimeout(() => {
-      playTone(554, 0.18, "triangle", 0.13);
-    }, 150);
-
-    setTimeout(() => {
-      playTone(659, 0.18, "triangle", 0.14);
-    }, 300);
+  sequence.forEach(([frequency, delay]) => {
 
     setTimeout(() => {
-      playTone(880, 0.35, "sine", 0.16);
-    }, 450);
 
-  }
+      const oscillator = ctx.createOscillator();
+      const gain = ctx.createGain();
 
-  else if(rarity === "Legendary"){
+      oscillator.type =
+        rarity === "Legendary"
+          ? "triangle"
+          : "sine";
 
-    await playTone(523, 0.18, "triangle", 0.14);
+      oscillator.frequency.setValueAtTime(
+        frequency,
+        ctx.currentTime
+      );
 
-    setTimeout(() => {
-      playTone(659, 0.18, "triangle", 0.15);
-    }, 150);
+      gain.gain.setValueAtTime(
+        rarity === "Legendary" ? 0.22 : 0.12,
+        ctx.currentTime
+      );
 
-    setTimeout(() => {
-      playTone(784, 0.18, "triangle", 0.16);
-    }, 300);
+      gain.gain.exponentialRampToValueAtTime(
+        0.001,
+        ctx.currentTime + 0.35
+      );
 
-    setTimeout(() => {
-      playTone(1046, 0.30, "triangle", 0.18);
-    }, 450);
+      oscillator.connect(gain);
+      gain.connect(ctx.destination);
 
-    setTimeout(() => {
-      playTone(1318, 0.50, "sine", 0.20);
-    }, 650);
+      oscillator.start();
+      oscillator.stop(ctx.currentTime + 0.35);
 
-  }
+    }, delay);
+
+  });
 
 }
   async function playRaritySound(rarity){
