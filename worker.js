@@ -287,10 +287,10 @@ function sanitizeItem(item) {
     name: item.name,
     image_url: item.image_url ?? null,
     probability: Number(item.probability),
-    stock: Number(item.stock)
+    stock: Number(item.stock),
+    rarity: item.rarity || "Common"
   };
 }
-
 async function handleHealth(env) {
   let database = false;
 
@@ -671,7 +671,8 @@ async function handleGacha(request, env) {
           name,
           image_url,
           probability,
-          stock
+          stock,
+          rarity
         FROM gacha_items
         WHERE box_id = ?
           AND stock > 0
@@ -803,13 +804,14 @@ async function handleGacha(request, env) {
         price_coins: price,
         active: Number(box.active)
       },
-      reward: {
-        id: selected.id,
-        box_id: selected.box_id,
-        name: selected.name,
-        image_url: selected.image_url ?? null,
-        probability: Number(selected.probability)
-      },
+     reward: {
+  id: selected.id,
+  box_id: selected.box_id,
+  name: selected.name,
+  image_url: selected.image_url ?? null,
+  probability: Number(selected.probability),
+  rarity: selected.rarity || "Common"
+},
       user: {
         id: user.id,
         email: user.email,
@@ -864,7 +866,8 @@ async function handleInventory(request, env) {
           g.box_id,
           g.name,
           g.image_url,
-          g.probability
+          g.probability,
+          g.rarity
         FROM inventory i
         JOIN gacha_items g
           ON g.id = i.item_id
