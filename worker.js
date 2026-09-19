@@ -1081,8 +1081,7 @@ async function handleRequest(request, env) {
 
   return null;
 }
-```
-
+'''
 
 export default {
   async fetch(request, env) {
